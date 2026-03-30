@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taskpilot - My Unique To-Do List</title>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;600;700&display=swap');
+
+        /* --- Auth Overlay Styles --- */
+        #auth-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .auth-container {
+            background: var(--background-white);
+            padding: 40px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        .auth-container h2 {
+            margin-top: 0;
+            color: var(--text-dark);
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .auth-form-group {
+            margin-bottom: 15px;
+        }
+
+        .auth-form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-dark);
+        }
+
+        .auth-form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-sizing: border-box;
+            background-color: var(--background-light);
+            color: var(--text-dark);
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--gradient-purple);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: opacity 0.2s;
+        }
+
+        .auth-btn:hover { opacity: 0.9; }
+
+        .auth-toggle {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .auth-toggle span {
+            color: var(--primary-purple);
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        /* --- Global / Root Styles (Default Theme) --- */
+        html, body {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        :root {
+            /* Theme 1: Default Purple-Blue (Fallback if JS fails or before loading) */
+            --primary-purple: #6a11cb;
+            --secondary-purple: #2575fc;
+            --gradient-purple: linear-gradient(to right, var(--primary-purple), var(--secondary-purple));
+            --background-light: #f4f7f6;
+            --background-white: #ffffff;
+            --hover-color: #f0f2f5;
+            --active-color: #e0e2e6;
+            --text-dark: #2c3e50;
+            --text-light: #ecf0f1;
+            --text-muted: #6c757d;
+            --icon-green: #28a745;
+            --icon-red: #dc3545;
+            --icon-yellow: #ffc107;
+            --checkbox-border: #ced4da;
+            --border-color: #e9ecef; /* Defined here for root as well */
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: var(--background-light);
+            color: var(--text-dark);
+        }
+
+        .app-container {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+            max-width: none;
+            margin: 0;
+            border-radius: 0;
+            box-shadow: none;
+            background-color: var(--background-white);
+            overflow: hidden;
+        }
+
+        /* --- Sidebar Styles --- */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--background-white);
+            border-right: 1px solid var(--border-color);
+            padding: 0 0; /* Adjusted padding to accommodate header */
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            overflow-y: auto;
+        }
+
+        /* --- Taskpilot Logo/Name --- */
+        .app-logo {
+            padding: 25px 20px 20px; /* Top padding, then 20px on sides, 20px bottom */
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .app-logo i {
+            font-size: 1.8rem;
+            color: var(--primary-purple);
+            margin-right: 15px;
+        }
+
+        .app-logo h2 {
+            margin: 0;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+            margin-top: -20px; /* Pull it up a bit to reduce gap with logo */
+        }
+
+        .user-profile .avatar {
+            font-size: 1.8rem;
+            color: var(--primary-purple);
+            margin-right: 15px;
+        }
+
+        .user-profile .user-info h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .user-profile .user-info p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .nav-lists {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            flex-grow: 1;
+        }
+
+        .nav-lists li {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            position: relative;
+        }
+
+        .nav-lists li:hover {
+            background-color: var(--hover-color);
+        }
+
+        .nav-lists li.active {
+            background-color: var(--active-color);
+            font-weight: 600;
+            color: var(--primary-purple);
+        }
+
+        .nav-lists li.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background-color: var(--primary-purple);
+            border-radius: 0 3px 3px 0;
+        }
+
+        .nav-lists li i {
+            margin-right: 15px;
+            font-size: 1.1rem;
+            color: var(--text-muted);
+        }
+
+        .nav-lists li.active i {
+            color: var(--primary-purple);
+        }
+
+        .nav-lists li span.list-name {
+            flex-grow: 1;
+        }
+
+        .nav-lists li span.list-count {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            background-color: var(--hover-color);
+            padding: 3px 8px;
+            border-radius: 5px;
+        }
+
+        .add-list-section {
+            padding: 15px 20px;
+            border-top: 1px solid var(--border-color);
+            margin-top: 20px;
+        }
+
+        .add-list-section button {
+            background: none;
+            border: none;
+            color: var(--primary-purple);
+            font-size: 1.0rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 10px 0;
+            display: flex;
+            align-items: center;
+            width: 100%;
+            text-align: left;
+        }
+
+        .add-list-section button i {
+            margin-right: 10px;
+            font-size: 1.1rem;
+        }
+        .add-list-section button:hover {
+            opacity: 0.8;
+        }
+
+
+        /* --- Main Content Styles --- */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--background-white);
+            position: relative;
+        }
+
+        .main-header {
+            background: var(--gradient-purple);
+            color: var(--text-light);
+            padding: 30px 40px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 10;
+        }
+
+        .main-header h2 {
+            margin: 0;
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .main-header p {
+            margin: 5px 0 0;
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+
+        .header-actions {
+            position: absolute;
+            top: 30px;
+            right: 40px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .header-actions button {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            color: var(--text-light);
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            display: flex; /* For centering icon */
+            justify-content: center;
+            align-items: center;
+        }
+
+        .header-actions button:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* --- List Options Menu (New) --- */
+        .list-options-menu {
+            position: absolute;
+            top: 75px; /* Adjust based on header action button height and desired spacing */
+            right: 40px;
+            background-color: var(--background-white);
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            min-width: 180px;
+            z-index: 20; /* Above other elements */
+            list-style: none;
+            padding: 8px 0;
+            margin: 0;
+            display: none; /* Hidden by default */
+            animation: fadeIn 0.15s ease-out; /* Simple fade-in animation */
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .list-options-menu li {
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            color: var(--text-dark);
+            transition: background-color 0.15s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .list-options-menu li i {
+            margin-right: 10px;
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .list-options-menu li:hover {
+            background-color: var(--hover-color);
+        }
+        .list-options-menu li:active {
+            background-color: var(--active-color);
+        }
+        .list-options-menu li.disabled {
+            color: var(--text-muted);
+            cursor: not-allowed;
+            opacity: 0.6;
+            pointer-events: none; /* Disable click events */
+        }
+
+
+        #todo-list {
+            list-style: none;
+            padding: 20px 40px;
+            margin: 0;
+            flex-grow: 1;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        .todo-item {
+            display: flex;
+            align-items: center;
+            background-color: var(--background-white);
+            padding: 15px 0;
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.2s ease;
+            position: relative;
+        }
+        .todo-item:last-of-type {
+            border-bottom: none;
+        }
+
+        .todo-item:hover {
+            background-color: var(--hover-color);
+        }
+
+        .todo-item.completed {
+            opacity: 0.7;
+        }
+
+        .todo-item .checkbox-container {
+            margin-right: 15px;
+            flex-shrink: 0;
+            position: relative;
+            width: 20px;
+            height: 20px;
+        }
+        .todo-item .checkbox-container input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--checkbox-border);
+            border-radius: 50%;
+            outline: none;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        .todo-item .checkbox-container input[type="checkbox"]:checked {
+            background-color: var(--secondary-purple);
+            border-color: var(--secondary-purple);
+        }
+        .todo-item .checkbox-container input[type="checkbox"]::before {
+            content: '\f00c';
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            font-size: 12px;
+            color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            transition: transform 0.2s ease-in-out;
+        }
+        .todo-item .checkbox-container input[type="checkbox"]:checked::before {
+            transform: translate(-50%, -50%) scale(1);
+        }
+        .todo-item .checkbox-container input[type="checkbox"]:focus {
+            box-shadow: 0 0 0 2px rgba(37, 117, 252, 0.2);
+        }
+
+
+        .todo-item .todo-info {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            cursor: text;
+            min-width: 0;
+        }
+        .todo-item .todo-info .todo-text {
+            font-size: 1.05rem;
+            font-weight: 400;
+            color: var(--text-dark);
+            word-break: break-word;
+        }
+        .todo-item.completed .todo-info .todo-text {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+        .todo-item .todo-info .todo-subtext {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 3px;
+        }
+
+        .todo-item .actions {
+            display: flex;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+            margin-left: 15px;
+            flex-shrink: 0;
+            gap: 8px;
+        }
+
+        .todo-item:hover .actions {
+            opacity: 1;
+        }
+
+        .todo-item .actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 8px;
+            border-radius: 5px;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            color: var(--text-muted);
+        }
+        .todo-item .actions button:hover {
+            background-color: var(--active-color);
+            color: var(--text-dark);
+        }
+
+        .todo-item .actions .delete-btn {
+            color: var(--icon-red);
+        }
+        .todo-item .actions .delete-btn:hover {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: var(--icon-red);
+        }
+        .todo-item .actions .edit-btn {
+             color: var(--primary-purple);
+        }
+        .todo-item .actions .edit-btn:hover {
+            background-color: rgba(106, 17, 203, 0.1);
+            color: var(--primary-purple);
+        }
+
+        .todo-item .important-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+            margin-left: 15px;
+            padding: 8px;
+            border-radius: 5px;
+            color: var(--text-muted);
+            transition: color 0.2s ease;
+            flex-shrink: 0;
+        }
+        .todo-item .important-btn:hover {
+            color: var(--icon-yellow);
+        }
+        .todo-item .important-btn.active {
+            color: var(--icon-yellow);
+        }
+
+        /* Inline Edit Specific Styles */
+        .todo-item .edit-input {
+            width: 100%;
+            padding: 5px 0;
+            border: none;
+            border-bottom: 1px solid var(--primary-purple);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 1.05rem;
+            background: transparent;
+            outline: none;
+            color: var(--text-dark);
+        }
+
+
+        /* --- Add Task Input --- */
+        .add-task-section {
+            padding: 20px 40px;
+            border-top: 1px solid var(--border-color);
+            background-color: var(--background-white);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-shrink: 0;
+        }
+
+        .add-task-section .add-icon {
+            color: var(--primary-purple);
+            font-size: 1.3rem;
+        }
+
+        #new-todo-input {
+            flex-grow: 1;
+            padding: 10px 0;
+            border: none;
+            border-bottom: 2px solid transparent;
+            font-size: 1.05rem;
+            outline: none;
+            transition: border-color 0.2s;
+            background: none;
+        }
+
+        #new-todo-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        #new-todo-input:focus {
+            border-color: var(--primary-purple);
+        }
+
+        #empty-message {
+            text-align: center;
+            color: var(--text-muted);
+            margin-top: 50px;
+            font-size: 1.1rem;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+                height: 100vh;
+                width: 100vw;
+                margin: 0;
+            }
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+                padding: 15px 0;
+            }
+            .app-logo {
+                padding: 15px 20px 10px; /* Adjust padding for smaller screens */
+            }
+            .user-profile {
+                padding: 10px 20px;
+                margin-bottom: 10px;
+                margin-top: 0;
+            }
+            .main-header {
+                padding: 20px 25px;
+            }
+            .header-actions {
+                top: 20px;
+                right: 25px;
+            }
+            .list-options-menu { /* Adjust menu position for smaller screens */
+                top: 55px;
+                right: 25px;
+            }
+            #todo-list, .add-task-section {
+                padding: 15px 25px;
+            }
+            .add-list-section {
+                margin-top: 0;
+                padding: 10px 20px;
+                border-top: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="auth-overlay" style="display: none;">
+        <div class="auth-container">
+            <h2 id="auth-title">Login to Taskpilot</h2>
+            <div id="auth-error" style="color: var(--icon-red); margin-bottom: 10px; font-size: 0.85rem; text-align: center; display: none;"></div>
+            <div class="auth-form-group" id="name-group" style="display: none;">
+                <label>Name</label>
+                <input type="text" id="auth-name" placeholder="Enter your name">
+            </div>
+            <div class="auth-form-group">
+                <label>Email</label>
+                <input type="email" id="auth-email" placeholder="Enter your email">
+            </div>
+            <div class="auth-form-group">
+                <label>Password</label>
+                <input type="password" id="auth-password" placeholder="Enter your password">
+            </div>
+            <button class="auth-btn" id="auth-submit-btn">Login</button>
+            <div class="auth-toggle">
+                <p id="auth-toggle-wrapper">Don't have an account? <span id="auth-toggle-btn">Sign Up</span></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <!-- Taskpilot Logo/Name (NEW) -->
+            <div class="app-logo">
+                <i class="fas fa-rocket"></i>
+                <h2>Taskpilot</h2>
+            </div>
+
+            <div class="user-profile">
+                <i class="fas fa-user-circle avatar"></i>
+                <div class="user-info">
+                    <h3>Your Name</h3>
+                    <p>MCA Project</p>
+                </div>
+                <button onclick="logout()" title="Logout" style="background: none; border: none; cursor: pointer; color: var(--text-muted); margin-left: auto;">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+
+            <ul class="nav-lists" id="nav-lists">
+                <!-- Nav items will be rendered dynamically here -->
+            </ul>
+
+            <div class="add-list-section">
+                <button id="add-new-list-btn">
+                    <i class="fas fa-plus-circle"></i> New list
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="main-header">
+                <h2 id="current-list-title">My Day</h2>
+                <p id="current-date"></p>
+                <div class="header-actions">
+                    <button id="theme-toggle-btn" title="Change Theme"><i class="fas fa-lightbulb"></i></button>
+                    <!-- More Options Button (with ID) -->
+                    <button id="more-options-btn" title="List Options"><i class="fas fa-ellipsis-h"></i></button>
+
+                    <!-- List Options Dropdown Menu (NEW) -->
+                    <ul id="list-options-menu" class="list-options-menu">
+                        <li id="edit-list-option"><i class="fas fa-edit"></i> Edit List</li>
+                        <li id="delete-list-option"><i class="fas fa-trash-alt"></i> Delete List</li>
+                    </ul>
+                </div>
+            </div>
+
+            <ul id="todo-list">
+                <p id="empty-message">No tasks yet! Add one below.</p>
+                <!-- To-do items will be dynamically added here -->
+            </ul>
+
+            <div class="add-task-section">
+                <i class="fas fa-plus add-icon"></i>
+                <input type="text" id="new-todo-input" placeholder="Add a task">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:3001'; // Base URL for API (changed to avoid conflict with frontend server)
+        const API_TODOS_URL = `${API_BASE_URL}/todos`;
+        const API_LISTS_SUMMARY_URL = `${API_BASE_URL}/lists/summary`;
+
+        // Auth elements
+        const authOverlay = document.getElementById('auth-overlay');
+        const authTitle = document.getElementById('auth-title');
+        const authName = document.getElementById('auth-name');
+        const authEmail = document.getElementById('auth-email');
+        const authPassword = document.getElementById('auth-password');
+        const authSubmitBtn = document.getElementById('auth-submit-btn');
+        const authToggleBtn = document.getElementById('auth-toggle-btn');
+        const authToggleWrapper = document.getElementById('auth-toggle-wrapper');
+        const nameGroup = document.getElementById('name-group');
+        const authError = document.getElementById('auth-error');
+
+        const navListsElem = document.getElementById('nav-lists');
+        const currentListTitle = document.getElementById('current-list-title');
+        const currentDateElem = document.getElementById('current-date');
+        const todoListElem = document.getElementById('todo-list');
+        const newTodoInput = document.getElementById('new-todo-input');
+        const emptyMessage = document.getElementById('empty-message');
+        const addNewListBtn = document.getElementById('add-new-list-btn');
+        const themeToggleButton = document.getElementById('theme-toggle-btn');
+        const moreOptionsButton = document.getElementById('more-options-btn');
+        const listOptionsMenu = document.getElementById('list-options-menu');
+        const editListOption = document.getElementById('edit-list-option');
+        const deleteListOption = document.getElementById('delete-list-option');
+
+        // Predefined lists with their icons (frontend only, backend doesn't store icons for lists)
+        const predefinedListConfig = [
+            { name: 'My Day', icon: 'far fa-sun' },
+            { name: 'Important', icon: 'far fa-star' },
+            { name: 'Planned', icon: 'far fa-calendar-alt' },
+            { name: 'Work', icon: 'fas fa-briefcase' },
+            { name: 'Shopping', icon: 'fas fa-shopping-cart' },
+            { name: 'Personal', icon: 'fas fa-user' },
+            { name: 'Learning', icon: 'fas fa-book' }
+        ];
+
+        let currentListFilter = 'My Day'; // Initially show 'My Day'
+
+        // --- THEME DEFINITIONS ---
+        let currentThemeIndex = 0;
+        const themes = [
+            // Theme 1: Default Purple-Blue
+            {
+                '--primary-purple': '#6a11cb', '--secondary-purple': '#2575fc', '--gradient-purple': 'linear-gradient(to right, #6a11cb, #2575fc)', '--background-light': '#f4f7f6', '--background-white': '#ffffff', '--hover-color': '#f0f2f5', '--active-color': '#e0e2e6', '--text-dark': '#2c3e50', '--text-light': '#ecf0f1', '--text-muted': '#6c757d', '--icon-green': '#28a745', '--icon-red': '#dc3545', '--icon-yellow': '#ffc107', '--checkbox-border': '#ced4da', '--border-color': '#e9ecef',
+            },
+            // Theme 2: Ocean Breeze (Blue-Green)
+            {
+                '--primary-purple': '#007bff', '--secondary-purple': '#28a745', '--gradient-purple': 'linear-gradient(to right, #007bff, #28a745)', '--background-light': '#e6f7ff', '--background-white': '#ffffff', '--hover-color': '#e9f6fb', '--active-color': '#d0e9f8', '--text-dark': '#154360', '--text-light': '#ecf0f1', '--text-muted': '#566573', '--icon-green': '#198754', '--icon-red': '#dc3545', '--icon-yellow': '#ffc107', '--checkbox-border': '#9fc2e6', '--border-color': '#e0f0ff',
+            },
+            // Theme 3: Sunset Orange (Orange-Red)
+            {
+                '--primary-purple': '#fd7e14', '--secondary-purple': '#dc3545', '--gradient-purple': 'linear-gradient(to right, #fd7e14, #dc3545)', '--background-light': '#fff4e6', '--background-white': '#ffffff', '--hover-color': '#ffe8d5', '--active-color': '#ffd9b3', '--text-dark': '#6a2a0a', '--text-light': '#ecf0f1', '--text-muted': '#8d4b27', '--icon-green': '#28a745', '--icon-red': '#b32d3a', '--icon-yellow': '#ffc107', '--checkbox-border': '#ffb087', '--border-color': '#ffe0c4',
+            },
+            // Theme 4: Forest Green (Green-Teal)
+            {
+                '--primary-purple': '#198754', '--secondary-purple': '#20c997', '--gradient-purple': 'linear-gradient(to right, #198754, #20c997)', '--background-light': '#e9faf2', '--background-white': '#ffffff', '--hover-color': '#e2f4ea', '--active-color': '#d4ede1', '--text-dark': '#0f462c', '--text-light': '#ecf0f1', '--text-muted': '#4a7d65', '--icon-green': '#198754', '--icon-red': '#dc3545', '--icon-yellow': '#ffc107', '--checkbox-border': '#8fd0b2', '--border-color': '#d0f5e1',
+            },
+            // Theme 5: Midnight Blue (Dark Blue-Purple)
+            {
+                '--primary-purple': '#343a40', '--secondary-purple': '#6f42c1', '--gradient-purple': 'linear-gradient(to right, #343a40, #6f42c1)', '--background-light': '#e0e6ed', '--background-white': '#ffffff', '--hover-color': '#d1d8e0', '--active-color': '#c0c8d1', '--text-dark': '#343a40', '--text-light': '#ecf0f1', '--text-muted': '#5a6268', '--icon-green': '#28a745', '--icon-red': '#dc3545', '--icon-yellow': '#ffc107', '--checkbox-border': '#7a8187', '--border-color': '#c7d0d9',
+            },
+            // Theme 6: Rose Pink (Pink-Light Purple)
+            {
+                '--primary-purple': '#e83e8c', '--secondary-purple': '#6f42c1', '--gradient-purple': 'linear-gradient(to right, #e83e8c, #6f42c1)', '--background-light': '#fce8f0', '--background-white': '#ffffff', '--hover-color': '#f8dbe4', '--active-color': '#f3c7d6', '--text-dark': '#8c164a', '--text-light': '#ecf0f1', '--text-muted': '#c15e8c', '--icon-green': '#28a745', '--icon-red': '#dc3545', '--icon-yellow': '#ffc107', '--checkbox-border': '#f5a2bf', '--border-color': '#fadfe6',
+            },
+            // Theme 7: Sunny Yellow (Yellow-Orange)
+            {
+                '--primary-purple': '#ffc107', '--secondary-purple': '#fd7e14', '--gradient-purple': 'linear-gradient(to right, #ffc107, #fd7e14)', '--background-light': '#fffcf1', '--background-white': '#ffffff', '--hover-color': '#fff5e0', '--active-color': '#ffebd4', '--text-dark': '#7a5a0d', '--text-light': '#ecf0f1', '--text-muted': '#a88837', '--icon-green': '#28a745', '--icon-red': '#dc3545', '--icon-yellow': '#e0a800', '--checkbox-border': '#ffda82', '--border-color': '#fff3c7',
+            },
+            // Theme 8: Deep Teal (Teal-Dark Blue)
+            {
+                '--primary-purple': '#20c997', '--secondary-purple': '#007bff', '--gradient-purple': 'linear-gradient(to right, #20c997, #007bff)', '--background-light': '#e9fdf9', '--background-white': '#ffffff', '--hover-color': '#dff4ed', '--active-color': '#c2e7dc', '--text-dark': '#10644d', '--text-light': '#ecf0f1', '--text-muted': '#4a9c84', '--icon-green': '#198754', '--icon-red': '#dc3545', '--icon-yellow': '#ffc107', '--checkbox-border': '#87dcc2', '--border-color': '#d0f5ee',
+            },
+            // Theme 9: Crimson Red (Dark Red-Orange)
+            {
+                '--primary-purple': '#dc3545', '--secondary-purple': '#fd7e14', '--gradient-purple': 'linear-gradient(to right, #dc3545, #fd7e14)', '--background-light': '#fdf2f2', '--background-white': '#ffffff', '--hover-color': '#fbe5e6', '--active-color': '#f8d9db', '--text-dark': '#8a1f29', '--text-light': '#ecf0f1', '--text-muted': '#b35d64', '--icon-green': '#28a745', '--icon-red': '#b32d3a', '--icon-yellow': '#ffc107', '--checkbox-border': '#ee98a0', '--border-color': '#fceaea',
+            },
+            // Theme 10: Monochrome (Grayscale with a hint of blue)
+            {
+                '--primary-purple': '#495057', '--secondary-purple': '#6c757d', '--gradient-purple': 'linear-gradient(to right, #495057, #6c757d)', '--background-light': '#f0f0f0', '--background-white': '#ffffff', '--hover-color': '#e8e8e8', '--active-color': '#e0e0e0', '--text-dark': '#343a40', '--text-light': '#ecf0f1', '--text-muted': '#6c757d', '--icon-green': '#28a745', '--icon-red': '#dc3545', '--icon-yellow': '#ffc107', '--checkbox-border': '#adb5bd', '--border-color': '#e6e6e6',
+            },
+            // Theme 11: Dark Mode Inspired (for a more unique feel)
+            {
+                '--primary-purple': '#4a148c', '--secondary-purple': '#7b1fa2', '--gradient-purple': 'linear-gradient(to right, #4a148c, #7b1fa2)', '--background-light': '#1a1a1a', '--background-white': '#2c2c2c', '--hover-color': '#3c3c3c', '--active-color': '#4c4c4c', '--text-dark': '#e0e0e0', '--text-light': '#ffffff', '--text-muted': '#b0b0b0', '--icon-green': '#69f0ae', '--icon-red': '#ff5252', '--icon-yellow': '#ffe57f', '--checkbox-border': '#808080', '--border-color': '#444444',
+            },
+            // Theme 12: Retro Sunset (Vibrant Gradient)
+            {
+                '--primary-purple': '#ff8c00', '--secondary-purple': '#e91e63', '--gradient-purple': 'linear-gradient(to right, #ff8c00, #e91e63)', '--background-light': '#ffe0b2', '--background-white': '#fff8e1', '--hover-color': '#ffecb3', '--active-color': '#ffd54f', '--text-dark': '#5d4037', '--text-light': '#ffffff', '--text-muted': '#8d6e63', '--icon-green': '#4caf50', '--icon-red': '#f44336', '--icon-yellow': '#ffc107', '--checkbox-border': '#ffab91', '--border-color': '#ffe6cc',
+            }
+        ];
+
+        // Function to apply a theme based on its index
+        function applyTheme(themeIndex) {
+            const theme = themes[themeIndex];
+            for (const property in theme) {
+                document.documentElement.style.setProperty(property, theme[property]);
+            }
+            // Save current theme index to localStorage for persistence (UI preference, not task data)
+            localStorage.setItem('currentThemeIndex', themeIndex);
+        }
+
+        // --- Auth Logic ---
+        let isLogin = true;
+
+        function setToken(token) { localStorage.setItem('taskpilot_token', token); }
+        function getToken() { return localStorage.getItem('taskpilot_token'); }
+        function logout() { localStorage.removeItem('taskpilot_token'); location.reload(); }
+
+        function getAuthHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getToken()}`
+            };
+        }
+
+        function toggleAuthMode() {
+            isLogin = !isLogin;
+            authTitle.textContent = isLogin ? 'Login to Taskpilot' : 'Create an Account';
+            authSubmitBtn.textContent = isLogin ? 'Login' : 'Sign Up';
+            nameGroup.style.display = isLogin ? 'none' : 'block';
+            authToggleWrapper.innerHTML = isLogin 
+                ? "Don't have an account? <span id='auth-toggle-btn'>Sign Up</span>" 
+                : "Already have an account? <span id='auth-toggle-btn'>Login</span>";
+            document.getElementById('auth-toggle-btn').onclick = toggleAuthMode;
+        }
+        authToggleBtn.onclick = toggleAuthMode;
+
+        authSubmitBtn.onclick = async () => {
+            const email = authEmail.value;
+            const password = authPassword.value;
+            const name = authName.value;
+            const endpoint = isLogin ? '/login' : '/signup';
+            const body = isLogin ? { email, password } : { name, email, password };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || 'Auth failed');
+                setToken(data.token);
+                authOverlay.style.display = 'none';
+                loadTodos();
+            } catch (err) {
+                authError.textContent = err.message;
+                authError.style.display = 'block';
+            }
+        };
+
+        // --- Helper Functions ---
+
+        // Get current date formatted
+        function getFormattedDate() {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            return new Date().toLocaleDateString('en-US', options);
+        }
+
+        // Check if a list is predefined (cannot be edited/deleted)
+        function isPredefinedList(listName) {
+            const predefinedNames = predefinedListConfig.map(l => l.name);
+            return predefinedNames.includes(listName) || listName === 'All';
+        }
+
+        // Function to render all navigation lists in the sidebar
+        async function renderNavLists() {
+            navListsElem.innerHTML = ''; // Clear existing lists
+
+            try {
+                const response = await fetch(API_LISTS_SUMMARY_URL, { headers: getAuthHeaders() });
+                if (response.status === 401) return logout();
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const { listCounts, importantCount, totalCount, userName } = await response.json();
+                if (userName) document.querySelector('.user-info h3').textContent = userName;
+
+                // Start with predefined lists
+                let allNavItems = predefinedListConfig.map(list => ({
+                    ...list,
+                    count: listCounts.find(lc => lc.name === list.name)?.count || 0
+                }));
+
+                // Add "All Tasks" item
+                allNavItems.push({ name: 'All', icon: 'fas fa-stream', count: totalCount });
+
+                // Identify and add custom lists from the backend
+                const customListsFromBackend = listCounts.filter(lc =>
+                    !predefinedListConfig.some(pl => pl.name === lc.name) && lc.name !== 'Important'
+                ).map(lc => ({
+                    name: lc.name,
+                    icon: 'fas fa-list', // Default icon for custom lists
+                    count: lc.count
+                }));
+                allNavItems.push(...customListsFromBackend);
+
+                // Update 'Important' count (it's a special filter, not a list itself for task assignment)
+                const importantItem = allNavItems.find(item => item.name === 'Important');
+                if (importantItem) {
+                    importantItem.count = importantCount;
+                }
+
+                allNavItems.forEach(list => {
+                    const listItem = document.createElement('li');
+                    listItem.classList.add('nav-item');
+                    if (list.name === currentListFilter) {
+                        listItem.classList.add('active');
+                    }
+                    listItem.dataset.listFilter = list.name;
+                    const countId = `count-${list.name.replace(/\s/g, '-')}`;
+                    listItem.innerHTML = `
+                        <i class="${list.icon}"></i>
+                        <span class="list-name">${list.name}</span>
+                        <span class="list-count" id="${countId}" style="display: ${list.count > 0 ? 'inline-block' : 'none'};">${list.count}</span>
+                    `;
+                    navListsElem.appendChild(listItem);
+                });
+
+            } catch (error) {
+                console.error('Error rendering nav lists:', error);
+                alert('Failed to load lists. Please ensure the backend server is running and accessible.');
+            }
+        }
+
+
+        async function loadTodos() {
+            if (!getToken()) { authOverlay.style.display = 'flex'; return; }
+            try {
+                const url = currentListFilter === 'All'
+                    ? API_TODOS_URL
+                    : `${API_TODOS_URL}?list=${encodeURIComponent(currentListFilter)}`;
+
+                const response = await fetch(url, { headers: getAuthHeaders() });
+                if (response.status === 401) return logout();
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const todos = await response.json();
+
+                todoListElem.innerHTML = '';
+
+                if (todos.length === 0) {
+                    emptyMessage.style.display = 'block';
+                } else {
+                    emptyMessage.style.display = 'none';
+                    todos.forEach(todo => renderTodo(todo));
+                }
+
+                await renderNavLists(); // Re-render nav lists to update counts
+                updateListOptionsMenuState(); // Update menu visibility/state
+            } catch (error) {
+                console.error('Error loading todos:', error);
+                alert('Failed to load tasks. Please ensure the backend server is running and accessible.');
+            }
+        }
+
+        function renderTodo(todo) {
+            const listItem = document.createElement('li');
+            listItem.classList.add('todo-item');
+            if (todo.completed) {
+                listItem.classList.add('completed');
+            }
+            listItem.dataset.id = todo._id; // Use MongoDB's _id
+
+            listItem.innerHTML = `
+                <label class="checkbox-container">
+                    <input type="checkbox" ${todo.completed ? 'checked' : ''} data-action="toggle-complete">
+                </label>
+                <div class="todo-info">
+                    <span class="todo-text">${todo.text}</span>
+                    ${todo.subText ? `<span class="todo-subtext">${todo.subText}</span>` : ''}
+                </div>
+                <button class="important-btn ${todo.isImportant ? 'active' : ''}" data-action="toggle-important" title="${todo.isImportant ? 'Mark as Not Important' : 'Mark as Important'}">
+                    <i class="${todo.isImportant ? 'fas' : 'far'} fa-star"></i>
+                </button>
+                <div class="actions">
+                    <button class="edit-btn" data-action="edit" title="Edit To-Do"><i class="fas fa-edit"></i></button>
+                    <button class="delete-btn" data-action="delete" title="Delete To-Do"><i class="fas fa-trash-alt"></i></button>
+                </div>
+            `;
+            todoListElem.appendChild(listItem);
+        }
+
+        // --- List Options Menu Logic ---
+        function toggleListOptionsMenu() {
+            listOptionsMenu.style.display = listOptionsMenu.style.display === 'block' ? 'none' : 'block';
+            updateListOptionsMenuState(); // Update state when toggling
+        }
+
+        function updateListOptionsMenuState() {
+            const isPredefined = isPredefinedList(currentListFilter);
+            if (isPredefined) {
+                editListOption.classList.add('disabled');
+                deleteListOption.classList.add('disabled');
+            } else {
+                editListOption.classList.remove('disabled');
+                deleteListOption.classList.remove('disabled');
+            }
+        }
+
+        // --- Event Listeners ---
+
+        newTodoInput.addEventListener('keypress', async (event) => {
+            if (event.key === 'Enter') {
+                const text = newTodoInput.value.trim();
+                if (text === '') {
+                    alert('Task cannot be empty!');
+                    return;
+                }
+
+                let assignedListForNewTodo = 'My Day';
+                let isNewTodoImportant = false;
+
+                if (currentListFilter === 'Important') {
+                    isNewTodoImportant = true;
+                    assignedListForNewTodo = 'My Day'; // Important tasks are still assigned to a regular list
+                } else if (currentListFilter !== 'All') {
+                    assignedListForNewTodo = currentListFilter;
+                }
+
+                try {
+                    const response = await fetch(API_TODOS_URL, {
+                        method: 'POST',
+                        headers: getAuthHeaders(),
+                        body: JSON.stringify({
+                            text,
+                            list: assignedListForNewTodo,
+                            isImportant: isNewTodoImportant
+                        }),
+                    });
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    newTodoInput.value = '';
+                    await loadTodos(); // Reload all to update list counts and display
+                    todoListElem.scrollTop = todoListElem.scrollHeight;
+                } catch (error) {
+                    console.error('Error adding todo:', error);
+                    alert('Failed to add task.');
+                }
+            }
+        });
+
+        todoListElem.addEventListener('click', async (event) => {
+            const target = event.target;
+            const listItem = target.closest('.todo-item');
+            if (!listItem) return;
+
+            const id = listItem.dataset.id; // Use _id from dataset
+            const action = target.dataset.action || target.closest('button')?.dataset.action;
+
+            if (!action || !id) return;
+
+            try {
+                if (action === 'toggle-complete') {
+                    const currentTodoResponse = await fetch(`${API_TODOS_URL}/${id}`, { headers: getAuthHeaders() });
+                    if (!currentTodoResponse.ok) throw new Error(`HTTP error! status: ${currentTodoResponse.status}`);
+                    const currentTodo = await currentTodoResponse.json();
+                    const newCompletedStatus = !currentTodo.completed;
+
+                    const updateResponse = await fetch(`${API_TODOS_URL}/${id}`, {
+                        method: 'PUT',
+                        headers: getAuthHeaders(),
+                        body: JSON.stringify({ completed: newCompletedStatus }),
+                    });
+                    if (!updateResponse.ok) throw new Error(`HTTP error! status: ${updateResponse.status}`);
+                    await loadTodos();
+                } else if (action === 'toggle-important') {
+                    const currentTodoResponse = await fetch(`${API_TODOS_URL}/${id}`, { headers: getAuthHeaders() });
+                    if (!currentTodoResponse.ok) throw new Error(`HTTP error! status: ${currentTodoResponse.status}`);
+                    const currentTodo = await currentTodoResponse.json();
+                    const newImportantStatus = !currentTodo.isImportant;
+
+                    const updateResponse = await fetch(`${API_TODOS_URL}/${id}`, {
+                        method: 'PUT',
+                        headers: getAuthHeaders(),
+                        body: JSON.stringify({ isImportant: newImportantStatus }),
+                    });
+                    if (!updateResponse.ok) throw new Error(`HTTP error! status: ${updateResponse.status}`);
+                    await loadTodos();
+                } else if (action === 'edit') {
+                    const todoInfoDiv = listItem.querySelector('.todo-info');
+                    const todoTextSpan = listItem.querySelector('.todo-text');
+                    const todoSubtextSpan = listItem.querySelector('.todo-subtext');
+
+                    const originalText = todoTextSpan.textContent;
+                    const originalSubtext = todoSubtextSpan ? todoSubtextSpan.textContent : '';
+
+                    const textInput = document.createElement('input');
+                    textInput.type = 'text';
+                    textInput.value = originalText;
+                    textInput.classList.add('edit-input');
+
+                    const subtextInput = document.createElement('input');
+                    subtextInput.type = 'text';
+                    subtextInput.value = originalSubtext;
+                    subtextInput.classList.add('edit-input');
+                    subtextInput.placeholder = 'Add sub-text (optional)';
+
+
+                    todoInfoDiv.innerHTML = '';
+                    todoInfoDiv.appendChild(textInput);
+                    todoInfoDiv.appendChild(subtextInput);
+
+                    textInput.focus();
+                    textInput.select();
+
+                    const saveEdit = async () => {
+                        const newText = textInput.value.trim();
+                        const newSubtext = subtextInput.value.trim();
+                        let changes = {};
+
+                        if (newText === '') {
+                            alert('Task text cannot be empty. Reverting to original.');
+                            await loadTodos();
+                            return;
+                        }
+
+                        if (newText !== originalText) {
+                            changes.text = newText;
+                        }
+                        if (newSubtext !== originalSubtext) {
+                            changes.subText = newSubtext;
+                        }
+
+                        if (Object.keys(changes).length > 0) {
+                            const updateResponse = await fetch(`${API_TODOS_URL}/${id}`, {
+                                method: 'PUT',
+                                headers: getAuthHeaders(),
+                                body: JSON.stringify(changes),
+                            });
+                            if (!updateResponse.ok) throw new Error(`HTTP error! status: ${updateResponse.status}`);
+                        }
+                        await loadTodos();
+                    };
+
+                    textInput.addEventListener('blur', saveEdit);
+                    subtextInput.addEventListener('blur', saveEdit);
+                    textInput.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            subtextInput.focus();
+                        }
+                    });
+                    subtextInput.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            subtextInput.blur();
+                        }
+                    });
+
+                } else if (action === 'delete') {
+                    if (!confirm('Are you sure you want to delete this task?')) return;
+                    const response = await fetch(`${API_TODOS_URL}/${id}`, { 
+                        method: 'DELETE',
+                        headers: getAuthHeaders()
+                    });
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    await loadTodos();
+                }
+            } catch (error) {
+                console.error('Error performing action:', error);
+                alert('Failed to update task.');
+            }
+        });
+
+        navListsElem.addEventListener('click', (event) => {
+            const navItem = event.target.closest('.nav-item');
+            if (navItem) {
+                document.querySelector('.nav-item.active')?.classList.remove('active');
+                navItem.classList.add('active');
+
+                currentListFilter = navItem.dataset.listFilter;
+                currentListTitle.textContent = navItem.querySelector('.list-name').textContent;
+                loadTodos(); // This will also call updateListOptionsMenuState
+            }
+        });
+
+        addNewListBtn.addEventListener('click', () => {
+            const newListName = prompt('Enter name for new list:');
+            if (newListName && newListName.trim() !== '') {
+                const trimmedName = newListName.trim();
+                const allExistingListNames = Array.from(document.querySelectorAll('.nav-lists .list-name')).map(el => el.textContent);
+
+                if (allExistingListNames.includes(trimmedName)) {
+                    alert('A list with this name already exists!');
+                    return;
+                }
+
+                // If a new list is created this way, we immediately set it as current filter
+                // It will appear in the sidebar once a task is added to it.
+                currentListFilter = trimmedName;
+                currentListTitle.textContent = trimmedName;
+                loadTodos(); // Reload to reflect the new active filter (and re-render nav for potential new list entry)
+            }
+        });
+
+        // --- THEME SWITCHING EVENT LISTENER ---
+        themeToggleButton.addEventListener('click', () => {
+            currentThemeIndex = (currentThemeIndex + 1) % themes.length;
+            applyTheme(currentThemeIndex);
+        });
+
+        // --- LIST OPTIONS MENU EVENT LISTENERS (NEW) ---
+        moreOptionsButton.addEventListener('click', (event) => {
+            event.stopPropagation(); // Prevent document click from closing it immediately
+            toggleListOptionsMenu();
+        });
+
+        editListOption.addEventListener('click', async () => {
+            if (editListOption.classList.contains('disabled')) return;
+
+            const oldListName = currentListFilter;
+            const newListName = prompt(`Rename list "${oldListName}" to:`, oldListName);
+
+            if (newListName && newListName.trim() !== '' && newListName.trim() !== oldListName) {
+                const trimmedNewName = newListName.trim();
+                const allExistingListNames = Array.from(document.querySelectorAll('.nav-lists .list-name')).map(el => el.textContent);
+                if (allExistingListNames.includes(trimmedNewName)) {
+                    alert('A list with this name already exists!');
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/lists/${encodeURIComponent(oldListName)}/rename`, {
+                        method: 'PUT',
+                        headers: getAuthHeaders(),
+                        body: JSON.stringify({ newName: trimmedNewName }),
+                    });
+                    if (!response.ok) {
+                         const errorData = await response.json();
+                         throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.error}`);
+                    }
+                    alert(`List "${oldListName}" renamed to "${trimmedNewName}".`);
+                    currentListFilter = trimmedNewName; // Set active filter to new name
+                    loadTodos(); // Reload everything to refresh UI
+                } catch (error) {
+                    console.error('Error renaming list:', error);
+                    alert('Failed to rename list. Please check backend or console for details.');
+                }
+            }
+            toggleListOptionsMenu(); // Close menu
+        });
+
+        deleteListOption.addEventListener('click', async () => {
+            if (deleteListOption.classList.contains('disabled')) return;
+
+            const listToDelete = currentListFilter;
+            if (!confirm(`Are you sure you want to delete the list "${listToDelete}"? All tasks in this list will be moved to "My Day".`)) {
+                toggleListOptionsMenu(); // Close menu if cancelled
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/lists/${encodeURIComponent(listToDelete)}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.error}`);
+                }
+                alert(`List "${listToDelete}" deleted. Associated tasks moved to "My Day".`);
+                currentListFilter = 'My Day'; // Switch to 'My Day' after deletion
+                loadTodos(); // Reload everything to refresh UI
+            } catch (error) {
+                console.error('Error deleting list:', error);
+                alert('Failed to delete list. Please check backend or console for details.');
+            }
+            toggleListOptionsMenu(); // Close menu
+        });
+
+        // Close list options menu if clicking anywhere else on the document
+        document.addEventListener('click', (event) => {
+            if (listOptionsMenu.style.display === 'block' &&
+                !moreOptionsButton.contains(event.target) &&
+                !listOptionsMenu.contains(event.target)) {
+                listOptionsMenu.style.display = 'none';
+            }
+        });
+
+
+        // Initial setup on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            currentDateElem.textContent = getFormattedDate();
+
+            const savedThemeIndex = localStorage.getItem('currentThemeIndex');
+            if (savedThemeIndex !== null) {
+                currentThemeIndex = parseInt(savedThemeIndex, 10);
+            }
+            applyTheme(currentThemeIndex);
+
+            if (!getToken()) {
+                authOverlay.style.display = 'flex';
+            } else {
+                loadTodos();
+            }
+        });
+    </script>
+</body>
+</html>
