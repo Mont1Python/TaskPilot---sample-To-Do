@@ -924,30 +924,38 @@
                 const { listCounts, importantCount, totalCount, userName } = await response.json();
                 if (userName) document.querySelector('.user-info h3').textContent = userName;
 
-                // Start with predefined lists
-                let allNavItems = predefinedListConfig.map(list => ({
-                    ...list,
-                    count: listCounts.find(lc => lc.name === list.name)?.count || 0
-                }));
+                // Create a Map to track lists and avoid duplicates
+                const navItemsMap = new Map();
 
-                // Add "All Tasks" item
-                allNavItems.push({ name: 'All', icon: 'fas fa-stream', count: totalCount });
+                // 1. Add Predefined Lists first
+                predefinedListConfig.forEach(list => {
+                    const countEntry = listCounts.find(lc => lc.name === list.name);
+                    navItemsMap.set(list.name, {
+                        ...list,
+                        count: countEntry ? countEntry.count : 0
+                    });
+                });
 
-                // Identify and add custom lists from the backend
-                const customListsFromBackend = listCounts.filter(lc =>
-                    !predefinedListConfig.some(pl => pl.name === lc.name) && lc.name !== 'Important'
-                ).map(lc => ({
-                    name: lc.name,
-                    icon: 'fas fa-list', // Default icon for custom lists
-                    count: lc.count
-                }));
-                allNavItems.push(...customListsFromBackend);
+                // 2. Add "All" list
+                navItemsMap.set('All', { name: 'All', icon: 'fas fa-stream', count: totalCount });
 
-                // Update 'Important' count (it's a special filter, not a list itself for task assignment)
-                const importantItem = allNavItems.find(item => item.name === 'Important');
-                if (importantItem) {
-                    importantItem.count = importantCount;
+                // 3. Add Custom Lists from backend (excluding predefined ones and special categories)
+                listCounts.forEach(lc => {
+                    if (lc.name && !navItemsMap.has(lc.name) && lc.name !== 'Important' && lc.name !== 'All') {
+                        navItemsMap.set(lc.name, {
+                            name: lc.name,
+                            icon: 'fas fa-list',
+                            count: lc.count
+                        });
+                    }
+                });
+
+                // Update 'Important' count specifically (it's already in the map via predefined config)
+                if (navItemsMap.has('Important')) {
+                    navItemsMap.get('Important').count = importantCount;
                 }
+
+                const allNavItems = Array.from(navItemsMap.values());
 
                 allNavItems.forEach(list => {
                     const listItem = document.createElement('li');
@@ -1128,7 +1136,7 @@
                     const todoTextSpan = listItem.querySelector('.todo-text');
                     const todoSubtextSpan = listItem.querySelector('.todo-subtext');
 
-                    const originalText = todoTextSpan.textContent;
+                    const originalText = todoTextSpan ? todoTextSpan.textContent : '';
                     const originalSubtext = todoSubtextSpan ? todoSubtextSpan.textContent : '';
 
                     const textInput = document.createElement('input');
@@ -1142,7 +1150,6 @@
                     subtextInput.classList.add('edit-input');
                     subtextInput.placeholder = 'Add sub-text (optional)';
 
-
                     todoInfoDiv.innerHTML = '';
                     todoInfoDiv.appendChild(textInput);
                     todoInfoDiv.appendChild(subtextInput);
@@ -1150,7 +1157,17 @@
                     textInput.focus();
                     textInput.select();
 
-                    const saveEdit = async () => {
+                    let isSaving = false;
+                    const saveEdit = async (event) => {
+                        // Prevent multiple saves or interference when switching between inputs
+                        if (isSaving) return;
+
+                        // Check if the relatedTarget (where focus is going) is one of our inputs
+                        if (event && (event.relatedTarget === textInput || event.relatedTarget === subtextInput)) {
+                            return;
+                        }
+
+                        isSaving = true;
                         const newText = textInput.value.trim();
                         const newSubtext = subtextInput.value.trim();
                         let changes = {};
@@ -1161,36 +1178,45 @@
                             return;
                         }
 
-                        if (newText !== originalText) {
-                            changes.text = newText;
-                        }
-                        if (newSubtext !== originalSubtext) {
-                            changes.subText = newSubtext;
-                        }
+                        if (newText !== originalText) changes.text = newText;
+                        if (newSubtext !== originalSubtext) changes.subText = newSubtext;
 
-                        if (Object.keys(changes).length > 0) {
-                            const updateResponse = await fetch(`${API_TODOS_URL}/${id}`, {
-                                method: 'PUT',
-                                headers: getAuthHeaders(),
-                                body: JSON.stringify(changes),
-                            });
-                            if (!updateResponse.ok) throw new Error(`HTTP error! status: ${updateResponse.status}`);
+                        try {
+                            if (Object.keys(changes).length > 0) {
+                                const updateResponse = await fetch(`${API_TODOS_URL}/${id}`, {
+                                    method: 'PUT',
+                                    headers: getAuthHeaders(),
+                                    body: JSON.stringify(changes),
+                                });
+                                if (!updateResponse.ok) throw new Error(`HTTP error! status: ${updateResponse.status}`);
+                            }
+                            await loadTodos();
+                        } catch (error) {
+                            console.error('Error saving edit:', error);
+                            alert('Failed to save changes.');
+                            await loadTodos();
+                        } finally {
+                            isSaving = false;
                         }
-                        await loadTodos();
                     };
 
                     textInput.addEventListener('blur', saveEdit);
                     subtextInput.addEventListener('blur', saveEdit);
-                    textInput.addEventListener('keypress', (e) => {
+
+                    textInput.addEventListener('keydown', (e) => {
                         if (e.key === 'Enter') {
                             e.preventDefault();
                             subtextInput.focus();
+                        } else if (e.key === 'Escape') {
+                            loadTodos();
                         }
                     });
-                    subtextInput.addEventListener('keypress', (e) => {
+                    subtextInput.addEventListener('keydown', (e) => {
                         if (e.key === 'Enter') {
                             e.preventDefault();
-                            subtextInput.blur();
+                            subtextInput.blur(); // Triggers saveEdit
+                        } else if (e.key === 'Escape') {
+                            loadTodos();
                         }
                     });
 
@@ -1225,9 +1251,10 @@
             const newListName = prompt('Enter name for new list:');
             if (newListName && newListName.trim() !== '') {
                 const trimmedName = newListName.trim();
-                const allExistingListNames = Array.from(document.querySelectorAll('.nav-lists .list-name')).map(el => el.textContent);
+                const allExistingListNames = Array.from(document.querySelectorAll('.nav-lists .list-name'))
+                    .map(el => el.textContent.toLowerCase());
 
-                if (allExistingListNames.includes(trimmedName)) {
+                if (allExistingListNames.includes(trimmedName.toLowerCase())) {
                     alert('A list with this name already exists!');
                     return;
                 }
@@ -1260,8 +1287,10 @@
 
             if (newListName && newListName.trim() !== '' && newListName.trim() !== oldListName) {
                 const trimmedNewName = newListName.trim();
-                const allExistingListNames = Array.from(document.querySelectorAll('.nav-lists .list-name')).map(el => el.textContent);
-                if (allExistingListNames.includes(trimmedNewName)) {
+                const allExistingListNames = Array.from(document.querySelectorAll('.nav-lists .list-name'))
+                    .map(el => el.textContent.toLowerCase());
+                
+                if (allExistingListNames.includes(trimmedNewName.toLowerCase())) {
                     alert('A list with this name already exists!');
                     return;
                 }

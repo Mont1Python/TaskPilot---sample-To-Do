@@ -88,6 +88,14 @@ app.post('/login', async (req, res) => {
 });
 
 // --- Todo Endpoints ---
+app.get('/todos/:id', auth, async (req, res) => {
+    try {
+        const todo = await Todo.findOne({ _id: req.params.id, userId: req.user._id });
+        if (!todo) return res.status(404).json({ error: 'Not found' });
+        res.json(todo);
+    } catch (error) { res.status(500).json({ error: 'Failed to fetch todo' }); }
+});
+
 app.get('/todos', auth, async (req, res) => {
     try {
         const { list } = req.query;
@@ -103,7 +111,9 @@ app.get('/todos', auth, async (req, res) => {
 
 app.post('/todos', auth, async (req, res) => {
     try {
-        const todo = new Todo({ ...req.body, userId: req.user._id });
+        const data = { ...req.body };
+        if (data.list) data.list = data.list.trim();
+        const todo = new Todo({ ...data, userId: req.user._id });
         await todo.save();
         res.status(201).json(todo);
     } catch (error) { res.status(400).json({ error: 'Failed to add' }); }
@@ -111,7 +121,9 @@ app.post('/todos', auth, async (req, res) => {
 
 app.put('/todos/:id', auth, async (req, res) => {
     try {
-        const todo = await Todo.findOneAndUpdate({ _id: req.params.id, userId: req.user._id }, req.body, { new: true });
+        const data = { ...req.body };
+        if (data.list) data.list = data.list.trim();
+        const todo = await Todo.findOneAndUpdate({ _id: req.params.id, userId: req.user._id }, data, { new: true });
         if (!todo) return res.status(404).json({ error: 'Not found' });
         res.json(todo);
     } catch (error) { res.status(400).json({ error: 'Failed to update' }); }
@@ -130,7 +142,7 @@ app.get('/lists/summary', auth, async (req, res) => {
         const listCounts = await Todo.aggregate([
             { $match: { userId: req.user._id } },
             { $group: { _id: '$list', count: { $sum: 1 } } },
-            { $project: { name: '$_id', count: 1, _id: 0 } }
+            { $project: { name: { $ifNull: ["$_id", "My Day"] }, count: 1, _id: 0 } }
         ]);
         const importantCount = await Todo.countDocuments({ userId: req.user._id, isImportant: true });
         const totalCount = await Todo.countDocuments({ userId: req.user._id });
@@ -140,7 +152,9 @@ app.get('/lists/summary', auth, async (req, res) => {
 
 app.put('/lists/:oldName/rename', auth, async (req, res) => {
     try {
-        const result = await Todo.updateMany({ userId: req.user._id, list: req.params.oldName }, { list: req.body.newName });
+        const newName = req.body.newName ? req.body.newName.trim() : null;
+        if (!newName) return res.status(400).json({ error: 'New name required' });
+        const result = await Todo.updateMany({ userId: req.user._id, list: req.params.oldName }, { list: newName });
         res.json({ modifiedCount: result.modifiedCount });
     } catch (error) { res.status(500).send(); }
 });
