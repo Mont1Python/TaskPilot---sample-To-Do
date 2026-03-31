@@ -9,6 +9,181 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;600;700&display=swap');
 
+        /* --- Global Animations --- */
+        .fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .fade-out {
+            animation: fadeOut 0.3s ease-in forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-5px); }
+        }
+
+        /* --- Toast Notifications --- */
+        #toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .toast-message {
+            background-color: var(--background-white);
+            color: var(--text-dark);
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            font-size: 0.9rem;
+            min-width: 250px;
+            max-width: 350px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideInFromRight 0.3s ease-out forwards, fadeOut 0.3s ease-in 2.7s forwards;
+            opacity: 0;
+        }
+
+        @keyframes slideInFromRight {
+            from { opacity: 0; transform: translateX(100%); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .toast-message.success { border-left: 5px solid var(--icon-green); }
+        .toast-message.error { border-left: 5px solid var(--icon-red); }
+        .toast-message.info { border-left: 5px solid var(--primary-purple); }
+
+        .toast-message i {
+            font-size: 1.2rem;
+        }
+        .toast-message.success i { color: var(--icon-green); }
+        .toast-message.error i { color: var(--icon-red); }
+        .toast-message.info i { color: var(--primary-purple); }
+
+
+        /* --- Modal Dialogs --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2500;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: var(--background-white);
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%; /* Adjusted for better mobile fit */
+            max-width: 450px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transform: translateY(-20px);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        @media (max-width: 480px) {
+            .modal-content {
+                padding: 20px; /* Smaller padding on small screens */
+            }
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .modal-content h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+            text-align: center;
+            font-size: 1.5rem;
+        }
+
+        .modal-content label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-dark);
+        }
+
+        .modal-content input[type="text"],
+        .modal-content input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+            font-size: 1rem;
+            background-color: var(--background-light);
+            color: var(--text-dark);
+        }
+
+        .modal-content .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .modal-content .modal-buttons button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s, background-color 0.2s;
+        }
+
+        .modal-content .modal-buttons .btn-cancel {
+            background-color: var(--hover-color);
+            color: var(--text-dark);
+        }
+        .modal-content .modal-buttons .btn-cancel:hover { background-color: var(--active-color); }
+
+        .modal-content .modal-buttons .btn-primary {
+            background: var(--gradient-purple);
+            color: white;
+        }
+        .modal-content .modal-buttons .btn-primary:hover { opacity: 0.9; }
+
+        .modal-content .modal-error {
+            color: var(--icon-red);
+            font-size: 0.85rem;
+            text-align: center;
+            margin-top: -10px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
         /* --- Auth Overlay Styles --- */
         #auth-overlay {
             position: fixed;
@@ -27,9 +202,14 @@
             background: var(--background-white);
             padding: 40px;
             border-radius: 12px;
-            width: 100%;
+            width: 90%; /* Adjusted for better mobile fit */
             max-width: 400px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        @media (max-width: 480px) {
+            .auth-container {
+                padding: 25px; /* Smaller padding on small screens */
+            }
         }
 
         .auth-container h2 {
@@ -96,27 +276,26 @@
             width: 100%;
             margin: 0;
             padding: 0;
-            overflow: hidden;
         }
 
         :root {
-            /* Theme 1: Default Purple-Blue (Fallback if JS fails or before loading) */
             --sidebar-width: 280px;
-            --primary-purple: #6a11cb;
-            --secondary-purple: #2575fc;
-            --gradient-purple: linear-gradient(to right, var(--primary-purple), var(--secondary-purple));
-            --background-light: #f4f7f6;
+            --primary-purple: #6366f1;
+            --secondary-purple: #8b5cf6;
+            --gradient-purple: linear-gradient(135deg, #6366f1, #8b5cf6);
+            --background-light: #f8fafc;
             --background-white: #ffffff;
-            --hover-color: #f0f2f5;
-            --active-color: #e0e2e6;
-            --text-dark: #2c3e50;
-            --text-light: #ecf0f1;
-            --text-muted: #6c757d;
-            --icon-green: #28a745;
-            --icon-red: #dc3545;
-            --icon-yellow: #ffc107;
-            --checkbox-border: #ced4da;
-            --border-color: #e9ecef; /* Defined here for root as well */
+            --hover-color: #f1f5f9;
+            --active-color: #e2e8f0;
+            --text-dark: #1e293b;
+            --text-light: #f8fafc;
+            --text-muted: #64748b;
+            --icon-green: #10b981;
+            --icon-red: #ef4444;
+            --icon-yellow: #f59e0b;
+            --checkbox-border: #cbd5e1;
+            --border-color: #e2e8f0;
+            --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
 
         body {
@@ -305,6 +484,26 @@
             position: relative;
             z-index: 10;
         }
+        @media (max-width: 480px) { /* Even smaller screens for header */
+            .main-header {
+                padding: 15px 20px; /* Reduce header padding further */
+            }
+            .main-header h2 {
+                font-size: 1.6rem;
+            }
+            .main-header p {
+                font-size: 0.9rem;
+            }
+            .header-actions {
+                top: 15px;
+                right: 15px;
+            }
+            .header-actions button {
+                width: 36px;
+                height: 36px;
+                font-size: 1rem;
+            }
+        }
 
         .menu-toggle-btn {
             display: none;
@@ -338,6 +537,51 @@
             right: 40px;
             display: flex;
             gap: 10px;
+        }
+        
+        .search-input-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--gradient-purple);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 40px;
+            box-sizing: border-box;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            z-index: 15; /* Above other header elements but below modals */
+        }
+        .search-input-container.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .search-input-container input {
+            width: 100%;
+            max-width: 600px;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            background-color: var(--background-white);
+            color: var(--text-dark); /* Use CSS variable for dynamic theme */
+            outline: none;
+        }
+        .search-input-container input::placeholder {
+            color: var(--text-muted);
+        }
+        .search-input-container .close-search-btn {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            font-size: 1.5rem;
+            margin-left: 15px;
+            cursor: pointer;
         }
 
         .header-actions button {
@@ -419,30 +663,39 @@
             overflow-y: auto;
             scroll-behavior: smooth;
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             grid-auto-rows: min-content;
-            gap: 16px;
+            gap: 20px;
             align-content: start;
+        }
+        @media (max-width: 480px) {
+            #todo-list {
+                padding: 10px 15px; /* Reduce todo list padding further */
+                gap: 15px;
+            }
         }
 
         .todo-item {
             display: flex;
             flex-direction: column;
             background-color: var(--background-white);
-            padding: 15px;
+            padding: 20px;
             border: 1px solid var(--border-color);
-            border-radius: 8px;
-            transition: box-shadow 0.2s ease, background-color 0.2s ease;
+            border-radius: 12px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
             position: relative;
-            min-height: 120px;
+            min-height: 140px;
+            box-shadow: var(--card-shadow);
         }
 
         .todo-item:hover {
-            box-shadow: 0 1px 2px 0 rgba(60,64,67,0.302), 0 1px 3px 1px rgba(60,64,67,0.149);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
         }
 
         .todo-item.completed {
             opacity: 0.7;
+            background-color: var(--hover-color);
         }
 
         .todo-item .checkbox-container {
@@ -510,19 +763,38 @@
         }
         .todo-item .todo-info .todo-text {
             font-size: 1.05rem;
-            font-weight: 400;
+            font-weight: 600; /* Made slightly bolder */
             color: var(--text-dark);
             word-break: break-word;
         }
         .todo-item.completed .todo-info .todo-text {
             text-decoration: line-through;
             color: var(--text-muted);
+            font-weight: 400;
         }
         .todo-item .todo-info .todo-subtext {
             font-size: 0.8rem;
             color: var(--text-muted);
-            margin-top: 3px;
+            margin-top: 5px; /* Increased margin */
         }
+        .todo-item .todo-info .todo-date {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: var(--hover-color);
+            padding: 4px 8px;
+            border-radius: 4px;
+            width: fit-content;
+        }
+        .todo-item .todo-info .todo-date.overdue {
+            color: #fff;
+            background-color: var(--icon-red);
+            font-weight: 600;
+        }
+
 
         .todo-item .actions {
             display: flex;
@@ -556,13 +828,21 @@
             color: var(--text-dark);
         }
 
-        .todo-item .actions .delete-btn {
+        .todo-item .actions .archive-btn, .todo-item .actions .delete-btn {
             color: var(--icon-red);
         }
-        .todo-item .actions .delete-btn:hover {
+        .todo-item .actions .archive-btn:hover, .todo-item .actions .delete-btn:hover {
             background-color: rgba(220, 53, 69, 0.1);
             color: var(--icon-red);
         }
+        .todo-item .actions .unarchive-btn {
+            color: var(--icon-green);
+        }
+        .todo-item .actions .unarchive-btn:hover {
+            background-color: rgba(40, 167, 69, 0.1);
+            color: var(--icon-green);
+        }
+
         .todo-item .actions .edit-btn {
              color: var(--primary-purple);
         }
@@ -594,7 +874,7 @@
             background-color: rgba(0,0,0,0.05);
         }
         .todo-item .important-btn.active {
-            color: var(--icon-yellow);
+            color: var(--icon-yellow); /* Kept as is, as --icon-yellow is already theme-aware */
         }
 
         /* Inline Edit Specific Styles */
@@ -609,17 +889,52 @@
             outline: none;
             color: var(--text-dark);
         }
+        .todo-item .edit-textarea {
+            width: 100%;
+            padding: 5px 0;
+            border: none;
+            border-bottom: 1px solid var(--primary-purple);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 0.9rem;
+            background: transparent;
+            outline: none;
+            color: var(--text-dark);
+            resize: vertical;
+            min-height: 40px;
+        }
+        .todo-item .edit-datetime {
+            width: 100%;
+            padding: 5px 0;
+            border: none;
+            border-bottom: 1px solid var(--primary-purple);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 0.9rem;
+            background: transparent;
+            outline: none;
+            color: var(--text-dark);
+            margin-top: 5px;
+        }
 
 
-        /* --- Add Task Input --- */
+        /* --- Add Task Input (Expanded) --- */
         .add-task-section {
-            padding: 20px 40px;
-            border-top: 1px solid var(--border-color);
+            padding: 15px 20px; /* Slightly adjusted padding */
             background-color: var(--background-white);
+            display: flex;
+            flex-direction: column; /* Stack elements vertically */
+            gap: 10px; /* Gap between new input elements */
+            flex-shrink: 0;
+            box-shadow: 0 1px 2px 0 rgba(60,64,67,0.302), 0 1px 3px 1px rgba(60,64,67,0.149); /* Default shadow */
+            border-radius: 8px;
+            border: none;
+        }
+        .add-task-section.expanded {
+            /* No specific shadow change on expanded, already has one */
+        }
+        .add-task-section .main-input-wrapper {
             display: flex;
             align-items: center;
             gap: 15px;
-            flex-shrink: 0;
         }
 
         .add-task-section .add-icon {
@@ -632,10 +947,11 @@
             padding: 10px 0;
             border: none;
             border-bottom: 2px solid transparent;
-            font-size: 1.05rem;
+            font-size: 1.1rem; /* Slightly larger for main input */
             outline: none;
             transition: border-color 0.2s;
             background: none;
+            font-weight: 600; /* Bolder for main input */
         }
 
         #new-todo-input::placeholder {
@@ -646,6 +962,87 @@
             border-color: var(--primary-purple);
         }
 
+        .add-task-expanded-options {
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            gap: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border-color);
+        }
+        .add-task-section.expanded .add-task-expanded-options {
+            display: flex; /* Show when expanded */
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .add-task-expanded-options .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .add-task-expanded-options label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+        .add-task-expanded-options input[type="text"],
+        .add-task-expanded-options input[type="datetime-local"],
+        .add-task-expanded-options select,
+        .add-task-expanded-options textarea {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            background-color: var(--background-light);
+            color: var(--text-dark);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .add-task-expanded-options input:focus,
+        .add-task-expanded-options select:focus,
+        .add-task-expanded-options textarea:focus {
+            border-color: var(--primary-purple);
+        }
+        .add-task-expanded-options textarea {
+            min-height: 60px;
+            resize: vertical;
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 5px;
+            margin-top: 5px;
+        }
+        .color-picker .color-swatch {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid var(--border-color);
+            cursor: pointer;
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+        }
+        .color-picker .color-swatch.active,
+        .color-picker .color-swatch:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 0 3px var(--primary-purple);
+        }
+        .color-picker .color-swatch.transparent {
+            background-color: transparent;
+            border: 2px dashed var(--checkbox-border);
+            position: relative;
+        }
+        .color-picker .color-swatch.transparent::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 2px;
+            background-color: var(--checkbox-border);
+            transform: translate(-50%, -50%) rotate(45deg);
+        }
+
+
         #empty-message {
             grid-column: 1 / -1;
             text-align: center;
@@ -653,6 +1050,15 @@
             margin-top: 50px;
             font-size: 1.1rem;
         }
+        #search-results-message {
+            grid-column: 1 / -1;
+            padding: 15px 40px 0;
+            color: var(--text-dark);
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: -10px;
+        }
+
 
         /* Responsive adjustments */
         @media (max-width: 768px) {
@@ -701,6 +1107,7 @@
             .add-task-container {
                 padding: 15px 20px !important;
             }
+            /* Add-task-section is now controlled by flex-direction: column so it adapts */
             .add-task-section {
                 padding: 10px 15px !important;
             }
@@ -708,6 +1115,49 @@
     </style>
 </head>
 <body>
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <!-- Modals -->
+    <div id="add-list-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Add New List</h3>
+            <div id="add-list-modal-error" class="modal-error"></div>
+            <label for="new-list-name-input">List Name</label>
+            <input type="text" id="new-list-name-input" placeholder="e.g., Groceries, Project X">
+            <div class="modal-buttons">
+                <button class="btn-cancel" onclick="hideModal('add-list-modal')">Cancel</button>
+                <button class="btn-primary" id="add-list-confirm-btn">Add List</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="rename-list-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Rename List</h3>
+            <div id="rename-list-modal-error" class="modal-error"></div>
+            <label for="rename-list-name-input">New List Name</label>
+            <input type="text" id="rename-list-name-input" placeholder="Enter new name">
+            <div class="modal-buttons">
+                <button class="btn-cancel" onclick="hideModal('rename-list-modal')">Cancel</button>
+                <button class="btn-primary" id="rename-list-confirm-btn">Rename</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="delete-list-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Delete List</h3>
+            <div id="delete-list-modal-error" class="modal-error"></div>
+            <p>Are you sure you want to delete the list "<strong id="delete-list-name-display"></strong>"?</p>
+            <p style="font-size: 0.9em; color: var(--text-muted); margin-top: 10px;">All tasks in this list will be moved to "My Day". This action cannot be undone and will not delete the tasks themselves.</p>
+            <div class="modal-buttons">
+                <button class="btn-cancel" onclick="hideModal('delete-list-modal')">Cancel</button>
+                <button class="btn-primary" id="delete-list-confirm-btn">Delete</button>
+            </div>
+        </div>
+    </div>
+
     <div id="auth-overlay" style="display: none;">
         <div class="auth-container">
             <h2 id="auth-title">Login to Taskpilot</h2>
@@ -744,8 +1194,8 @@
             <div class="user-profile">
                 <i class="fas fa-user-circle avatar"></i>
                 <div class="user-info">
-                    <h3>Your Name</h3>
-                    <p>MCA Project</p>
+                    <h3 id="profile-name">User</h3>
+                    <p id="profile-tagline" contenteditable="true" title="Click to edit tagline">MCA Project</p>
                 </div>
                 <button onclick="logout()" title="Logout" style="background: none; border: none; cursor: pointer; color: var(--text-muted); margin-left: auto;">
                     <i class="fas fa-sign-out-alt"></i>
@@ -769,7 +1219,12 @@
                 <button id="menu-toggle-btn" class="menu-toggle-btn"><i class="fas fa-bars"></i></button>
                 <h2 id="current-list-title">All</h2>
                 <p id="current-date"></p>
+                <div class="search-input-container" id="search-input-container">
+                    <input type="search" id="global-search-input" placeholder="Search tasks...">
+                    <button class="close-search-btn" id="close-search-btn"><i class="fas fa-times"></i></button>
+                </div>
                 <div class="header-actions">
+                    <button id="search-toggle-btn" title="Search"><i class="fas fa-search"></i></button>
                     <button id="theme-toggle-btn" title="Change Theme"><i class="fas fa-lightbulb"></i></button>
                     <!-- More Options Button (with ID) -->
                     <button id="more-options-btn" title="List Options"><i class="fas fa-ellipsis-h"></i></button>
@@ -783,13 +1238,42 @@
             </div>
 
             <div class="add-task-container" style="padding: 20px 40px; display: flex; justify-content: center; flex-shrink: 0;">
-                <div class="add-task-section" style="max-width: 600px; width: 100%; box-shadow: 0 1px 2px 0 rgba(60,64,67,0.302), 0 1px 3px 1px rgba(60,64,67,0.149); border-radius: 8px; border: none; padding: 12px 20px; gap: 0;">
-                    <input type="text" id="new-todo-input" placeholder="Take a note..." style="border: none; font-weight: 600; font-size: 1.1rem; width: 100%;">
+                <div class="add-task-section" id="add-task-section" style="max-width: 600px; width: 100%;">
+                    <div class="main-input-wrapper">
+                        <i class="fas fa-plus add-icon"></i>
+                        <input type="text" id="new-todo-input" placeholder="Take a note...">
+                    </div>
+                    <div class="add-task-expanded-options">
+                        <div class="input-group">
+                            <label for="new-todo-subtext">Sub-text (optional)</label>
+                            <textarea id="new-todo-subtext" placeholder="Add details or sub-tasks..."></textarea>
+                        </div>
+                        <div class="input-group">
+                            <label for="new-todo-duedate">Due Date (optional)</label>
+                            <input type="datetime-local" id="new-todo-duedate">
+                        </div>
+                        <div class="input-group">
+                            <label>Highlight Color</label>
+                            <div class="color-picker" id="new-todo-color-picker">
+                                <div class="color-swatch transparent active" data-color="transparent" title="No Color"></div>
+                                <div class="color-swatch" style="background-color: #ffc107;" data-color="#ffc107" title="Yellow"></div>
+                                <div class="color-swatch" style="background-color: #28a745;" data-color="#28a745" title="Green"></div>
+                                <div class="color-swatch" style="background-color: #007bff;" data-color="#007bff" title="Blue"></div>
+                                <div class="color-swatch" style="background-color: #6f42c1;" data-color="#6f42c1" title="Purple"></div>
+                                <div class="color-swatch" style="background-color: #dc3545;" data-color="#dc3545" title="Red"></div>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label for="new-todo-list-select">Add to List</label>
+                            <select id="new-todo-list-select"></select>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <ul id="todo-list">
                 <p id="empty-message">No tasks yet! Add one above.</p>
+                <p id="search-results-message" style="display: none;"></p>
                 <!-- To-do items will be dynamically added here -->
             </ul>
         </div>
@@ -799,6 +1283,8 @@
         const API_BASE_URL = 'https://taskpilot-sample-to-do.onrender.com'; // Base URL for API (changed to avoid conflict with frontend server)
         const API_TODOS_URL = `${API_BASE_URL}/todos`;
         const API_LISTS_SUMMARY_URL = `${API_BASE_URL}/lists/summary`;
+        const API_SEARCH_URL = `${API_BASE_URL}/todos/search`;
+
 
         // Auth elements
         const authOverlay = document.getElementById('auth-overlay');
@@ -812,11 +1298,11 @@
         const nameGroup = document.getElementById('name-group');
         const authError = document.getElementById('auth-error');
 
+        // Main App Elements
         const navListsElem = document.getElementById('nav-lists');
         const currentListTitle = document.getElementById('current-list-title');
         const currentDateElem = document.getElementById('current-date');
         const todoListElem = document.getElementById('todo-list');
-        const newTodoInput = document.getElementById('new-todo-input');
         const emptyMessage = document.getElementById('empty-message');
         const addNewListBtn = document.getElementById('add-new-list-btn');
         const themeToggleButton = document.getElementById('theme-toggle-btn');
@@ -825,73 +1311,94 @@
         const editListOption = document.getElementById('edit-list-option');
         const deleteListOption = document.getElementById('delete-list-option');
         
+        // Sidebar & Mobile Toggle
         const sidebar = document.getElementById('sidebar');
         const sidebarOverlay = document.getElementById('sidebar-overlay');
         const menuToggleBtn = document.getElementById('menu-toggle-btn');
 
-        // Predefined lists with their icons (frontend only, backend doesn't store icons for lists)
+        // Add Task Input (Expanded) elements
+        const addTaskSection = document.getElementById('add-task-section');
+        const newTodoInput = document.getElementById('new-todo-input');
+        const newTodoSubtext = document.getElementById('new-todo-subtext');
+        const newTodoDuedate = document.getElementById('new-todo-duedate');
+        const newTodoColorPicker = document.getElementById('new-todo-color-picker');
+        const newTodoListSelect = document.getElementById('new-todo-list-select');
+        let selectedNewTodoColor = 'transparent';
+
+        // Modals
+        const addListModal = document.getElementById('add-list-modal');
+        const newListNameInput = document.getElementById('new-list-name-input');
+        const addListConfirmBtn = document.getElementById('add-list-confirm-btn');
+        const addListModalError = document.getElementById('add-list-modal-error');
+
+        const renameListModal = document.getElementById('rename-list-modal');
+        const renameListNameInput = document.getElementById('rename-list-name-input');
+        const renameListConfirmBtn = document.getElementById('rename-list-confirm-btn');
+        const renameListModalError = document.getElementById('rename-list-modal-error');
+
+        const deleteListModal = document.getElementById('delete-list-modal');
+        const deleteListNameDisplay = document.getElementById('delete-list-name-display');
+        const deleteListConfirmBtn = document.getElementById('delete-list-confirm-btn');
+        const deleteListModalError = document.getElementById('delete-list-modal-error');
+
+        // Search
+        const searchToggleBtn = document.getElementById('search-toggle-btn');
+        const searchInputContainer = document.getElementById('search-input-container');
+        const globalSearchInput = document.getElementById('global-search-input');
+        const closeSearchBtn = document.getElementById('close-search-btn');
+        const searchResultsMessage = document.getElementById('search-results-message');
+        let currentSearchQuery = null;
+
+
         const predefinedListConfig = [
+            { name: 'All', icon: 'fas fa-tasks' },
             { name: 'My Day', icon: 'far fa-sun' },
             { name: 'Important', icon: 'far fa-star' },
             { name: 'Planned', icon: 'far fa-calendar-alt' },
-            { name: 'Work', icon: 'fas fa-briefcase' },
-            { name: 'Shopping', icon: 'fas fa-shopping-cart' },
-            { name: 'Personal', icon: 'fas fa-user' },
-            { name: 'Learning', icon: 'fas fa-book' }
+            { name: 'Completed', icon: 'fas fa-check-double' }, // NEW
+            { name: 'Overdue', icon: 'fas fa-exclamation-triangle' } // NEW
+            // Removed Archive
         ];
 
-        let currentListFilter = 'All'; // Initially show 'All'
+        const quotes = [
+            "I’m not lazy, I’m on energy saving mode.",
+            "My bed is a magical place where I suddenly remember everything I forgot to do.",
+            "Doing nothing is hard, you never know when you're finished.",
+            "I put the ‘pro’ in procrastinate.",
+            "To-do list: 1. Wake up. 2. Survive. 3. Go back to sleep.",
+            "I followed my heart and it led me to the fridge.",
+            "Everything is a task if you think about it long enough."
+        ];
 
-        // --- THEME DEFINITIONS ---
+        let currentListFilter = 'All';
+
         let currentThemeIndex = 0;
         const themes = [
-            // Theme 1: Default Purple-Blue
-            {
-                '--primary-purple': '#6a11cb', '--secondary-purple': '#2575fc', '--gradient-purple': 'linear-gradient(to right, #6a11cb, #2575fc)', '--background-light': '#f4f7f6', '--background-white': '#ffffff', '--hover-color': '#f0f2f5', '--active-color': '#e0e2e6', '--text-dark': '#2c3e50', '--text-light': '#ecf0f1', '--text-muted': '#6c757d', '--icon-green': '#28a745', '--icon-red': '#dc3545', '--icon-yellow': '#ffc107', '--checkbox-border': '#ced4da', '--border-color': '#e9ecef',
+            // 4 LIGHT THEMES
+            { // Modern Indigo
+                '--primary-purple': '#6366f1', '--secondary-purple': '#8b5cf6', '--gradient-purple': 'linear-gradient(135deg, #6366f1, #8b5cf6)', '--background-light': '#f8fafc', '--background-white': '#ffffff', '--hover-color': '#f1f5f9', '--active-color': '#e2e8f0', '--text-dark': '#1e293b', '--text-light': '#f8fafc', '--text-muted': '#64748b', '--icon-green': '#10b981', '--icon-red': '#ef4444', '--icon-yellow': '#f59e0b', '--checkbox-border': '#cbd5e1', '--border-color': '#e2e8f0'
             },
-            // Theme 2: Ocean Breeze (Blue-Green)
-            {
-                '--primary-purple': '#007bff', '--secondary-purple': '#28a745', '--gradient-purple': 'linear-gradient(to right, #007bff, #28a745)', '--background-light': '#e6f7ff', '--background-white': '#ffffff', '--hover-color': '#e9f6fb', '--active-color': '#d0e9f8', '--text-dark': '#154360', '--text-light': '#ecf0f1', '--text-muted': '#566573', '--icon-green': '#198754', '--icon-red': '#dc3545', '--icon-yellow': '#ffc107', '--checkbox-border': '#9fc2e6', '--border-color': '#e0f0ff',
+            { // Soft Sage
+                '--primary-purple': '#059669', '--secondary-purple': '#10b981', '--gradient-purple': 'linear-gradient(135deg, #059669, #10b981)', '--background-light': '#f0fdf4', '--background-white': '#ffffff', '--hover-color': '#dcfce7', '--active-color': '#bbf7d0', '--text-dark': '#064e3b', '--text-light': '#f0fdf4', '--text-muted': '#374151', '--icon-green': '#059669', '--icon-red': '#dc2626', '--icon-yellow': '#d97706', '--checkbox-border': '#86efac', '--border-color': '#dcfce7'
             },
-            // Theme 3: Sunset Orange (Orange-Red)
-            {
-                '--primary-purple': '#fd7e14', '--secondary-purple': '#dc3545', '--gradient-purple': 'linear-gradient(to right, #fd7e14, #dc3545)', '--background-light': '#fff4e6', '--background-white': '#ffffff', '--hover-color': '#ffe8d5', '--active-color': '#ffd9b3', '--text-dark': '#6a2a0a', '--text-light': '#ecf0f1', '--text-muted': '#8d4b27', '--icon-green': '#28a745', '--icon-red': '#b32d3a', '--icon-yellow': '#ffc107', '--checkbox-border': '#ffb087', '--border-color': '#ffe0c4',
+            { // Warm Amber
+                '--primary-purple': '#d97706', '--secondary-purple': '#f59e0b', '--gradient-purple': 'linear-gradient(135deg, #d97706, #f59e0b)', '--background-light': '#fffbeb', '--background-white': '#ffffff', '--hover-color': '#fef3c7', '--active-color': '#fde68a', '--text-dark': '#451a03', '--text-light': '#fffbeb', '--text-muted': '#78350f', '--icon-green': '#10b981', '--icon-red': '#ef4444', '--icon-yellow': '#b45309', '--checkbox-border': '#fcd34d', '--border-color': '#fef3c7'
             },
-            // Theme 4: Forest Green (Green-Teal)
-            {
-                '--primary-purple': '#198754', '--secondary-purple': '#20c997', '--gradient-purple': 'linear-gradient(to right, #198754, #20c997)', '--background-light': '#e9faf2', '--background-white': '#ffffff', '--hover-color': '#e2f4ea', '--active-color': '#d4ede1', '--text-dark': '#0f462c', '--text-light': '#ecf0f1', '--text-muted': '#4a7d65', '--icon-green': '#198754', '--icon-red': '#dc3545', '--icon-yellow': '#ffc107', '--checkbox-border': '#8fd0b2', '--border-color': '#d0f5e1',
+            { // Rose Petal
+                '--primary-purple': '#db2777', '--secondary-purple': '#f472b6', '--gradient-purple': 'linear-gradient(135deg, #db2777, #f472b6)', '--background-light': '#fff1f2', '--background-white': '#ffffff', '--hover-color': '#ffe4e6', '--active-color': '#fecdd3', '--text-dark': '#4c0519', '--text-light': '#fff1f2', '--text-muted': '#881337', '--icon-green': '#10b981', '--icon-red': '#e11d48', '--icon-yellow': '#f59e0b', '--checkbox-border': '#fda4af', '--border-color': '#ffe4e6'
             },
-            // Theme 5: Midnight Blue (Dark Blue-Purple)
-            {
-                '--primary-purple': '#343a40', '--secondary-purple': '#6f42c1', '--gradient-purple': 'linear-gradient(to right, #343a40, #6f42c1)', '--background-light': '#e0e6ed', '--background-white': '#ffffff', '--hover-color': '#d1d8e0', '--active-color': '#c0c8d1', '--text-dark': '#343a40', '--text-light': '#ecf0f1', '--text-muted': '#5a6268', '--icon-green': '#28a745', '--icon-red': '#dc3545', '--icon-yellow': '#ffc107', '--checkbox-border': '#7a8187', '--border-color': '#c7d0d9',
+            // 4 DARK THEMES
+            { // Midnight Slate
+                '--primary-purple': '#4f46e5', '--secondary-purple': '#7c3aed', '--gradient-purple': 'linear-gradient(135deg, #4f46e5, #7c3aed)', '--background-light': '#0f172a', '--background-white': '#1e293b', '--hover-color': '#334155', '--active-color': '#475569', '--text-dark': '#f1f5f9', '--text-light': '#ffffff', '--text-muted': '#94a3b8', '--icon-green': '#34d399', '--icon-red': '#f87171', '--icon-yellow': '#fbbf24', '--checkbox-border': '#475569', '--border-color': '#334155'
             },
-            // Theme 6: Rose Pink (Pink-Light Purple)
-            {
-                '--primary-purple': '#e83e8c', '--secondary-purple': '#6f42c1', '--gradient-purple': 'linear-gradient(to right, #e83e8c, #6f42c1)', '--background-light': '#fce8f0', '--background-white': '#ffffff', '--hover-color': '#f8dbe4', '--active-color': '#f3c7d6', '--text-dark': '#8c164a', '--text-light': '#ecf0f1', '--text-muted': '#c15e8c', '--icon-green': '#28a745', '--icon-red': '#dc3545', '--icon-yellow': '#ffc107', '--checkbox-border': '#f5a2bf', '--border-color': '#fadfe6',
+            { // Charcoal Deep
+                '--primary-purple': '#2563eb', '--secondary-purple': '#3b82f6', '--gradient-purple': 'linear-gradient(135deg, #2563eb, #3b82f6)', '--background-light': '#171717', '--background-white': '#262626', '--hover-color': '#404040', '--active-color': '#525252', '--text-dark': '#f5f5f5', '--text-light': '#ffffff', '--text-muted': '#a3a3a3', '--icon-green': '#4ade80', '--icon-red': '#f87171', '--icon-yellow': '#fbbf24', '--checkbox-border': '#525252', '--border-color': '#404040'
             },
-            // Theme 7: Sunny Yellow (Yellow-Orange)
-            {
-                '--primary-purple': '#ffc107', '--secondary-purple': '#fd7e14', '--gradient-purple': 'linear-gradient(to right, #ffc107, #fd7e14)', '--background-light': '#fffcf1', '--background-white': '#ffffff', '--hover-color': '#fff5e0', '--active-color': '#ffebd4', '--text-dark': '#7a5a0d', '--text-light': '#ecf0f1', '--text-muted': '#a88837', '--icon-green': '#28a745', '--icon-red': '#dc3545', '--icon-yellow': '#e0a800', '--checkbox-border': '#ffda82', '--border-color': '#fff3c7',
+            { // Dark Forest
+                '--primary-purple': '#059669', '--secondary-purple': '#10b981', '--gradient-purple': 'linear-gradient(135deg, #059669, #10b981)', '--background-light': '#064e3b', '--background-white': '#065f46', '--hover-color': '#047857', '--active-color': '#065f46', '--text-dark': '#ecfdf5', '--text-light': '#ffffff', '--text-muted': '#a7f3d0', '--icon-green': '#34d399', '--icon-red': '#f87171', '--icon-yellow': '#fbbf24', '--checkbox-border': '#065f46', '--border-color': '#047857'
             },
-            // Theme 8: Deep Teal (Teal-Dark Blue)
-            {
-                '--primary-purple': '#20c997', '--secondary-purple': '#007bff', '--gradient-purple': 'linear-gradient(to right, #20c997, #007bff)', '--background-light': '#e9fdf9', '--background-white': '#ffffff', '--hover-color': '#dff4ed', '--active-color': '#c2e7dc', '--text-dark': '#10644d', '--text-light': '#ecf0f1', '--text-muted': '#4a9c84', '--icon-green': '#198754', '--icon-red': '#dc3545', '--icon-yellow': '#ffc107', '--checkbox-border': '#87dcc2', '--border-color': '#d0f5ee',
-            },
-            // Theme 9: Crimson Red (Dark Red-Orange)
-            {
-                '--primary-purple': '#dc3545', '--secondary-purple': '#fd7e14', '--gradient-purple': 'linear-gradient(to right, #dc3545, #fd7e14)', '--background-light': '#fdf2f2', '--background-white': '#ffffff', '--hover-color': '#fbe5e6', '--active-color': '#f8d9db', '--text-dark': '#8a1f29', '--text-light': '#ecf0f1', '--text-muted': '#b35d64', '--icon-green': '#28a745', '--icon-red': '#b32d3a', '--icon-yellow': '#ffc107', '--checkbox-border': '#ee98a0', '--border-color': '#fceaea',
-            },
-            // Theme 10: Monochrome (Grayscale with a hint of blue)
-            {
-                '--primary-purple': '#495057', '--secondary-purple': '#6c757d', '--gradient-purple': 'linear-gradient(to right, #495057, #6c757d)', '--background-light': '#f0f0f0', '--background-white': '#ffffff', '--hover-color': '#e8e8e8', '--active-color': '#e0e0e0', '--text-dark': '#343a40', '--text-light': '#ecf0f1', '--text-muted': '#6c757d', '--icon-green': '#28a745', '--icon-red': '#dc3545', '--icon-yellow': '#ffc107', '--checkbox-border': '#adb5bd', '--border-color': '#e6e6e6',
-            },
-            // Theme 11: Dark Mode Inspired (for a more unique feel)
-            {
-                '--primary-purple': '#4a148c', '--secondary-purple': '#7b1fa2', '--gradient-purple': 'linear-gradient(to right, #4a148c, #7b1fa2)', '--background-light': '#1a1a1a', '--background-white': '#2c2c2c', '--hover-color': '#3c3c3c', '--active-color': '#4c4c4c', '--text-dark': '#e0e0e0', '--text-light': '#ffffff', '--text-muted': '#b0b0b0', '--icon-green': '#69f0ae', '--icon-red': '#ff5252', '--icon-yellow': '#ffe57f', '--checkbox-border': '#808080', '--border-color': '#444444',
-            },
-            // Theme 12: Retro Sunset (Vibrant Gradient)
-            {
-                '--primary-purple': '#ff8c00', '--secondary-purple': '#e91e63', '--gradient-purple': 'linear-gradient(to right, #ff8c00, #e91e63)', '--background-light': '#ffe0b2', '--background-white': '#fff8e1', '--hover-color': '#ffecb3', '--active-color': '#ffd54f', '--text-dark': '#5d4037', '--text-light': '#ffffff', '--text-muted': '#8d6e63', '--icon-green': '#4caf50', '--icon-red': '#f44336', '--icon-yellow': '#ffc107', '--checkbox-border': '#ffab91', '--border-color': '#ffe6cc',
+            { // Deep Violet
+                '--primary-purple': '#7c3aed', '--secondary-purple': '#a78bfa', '--gradient-purple': 'linear-gradient(135deg, #7c3aed, #a78bfa)', '--background-light': '#2e1065', '--background-white': '#4c1d95', '--hover-color': '#5b21b6', '--active-color': '#6d28d9', '--text-dark': '#f5f3ff', '--text-light': '#ffffff', '--text-muted': '#c4b5fd', '--icon-green': '#34d399', '--icon-red': '#f87171', '--icon-yellow': '#fbbf24', '--checkbox-border': '#6d28d9', '--border-color': '#5b21b6'
             }
         ];
 
@@ -958,138 +1465,291 @@
         // --- Helper Functions ---
 
         // Get current date formatted
-        function getFormattedDate() {
+        function getFormattedDate(date = new Date()) {
             const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            return new Date().toLocaleDateString('en-US', options);
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        function formatDueDate(dueDateStr) {
+            if (!dueDateStr) return '';
+            const dueDate = new Date(dueDateStr);
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+            const dueDay = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
+
+            const timeOptions = { hour: 'numeric', minute: '2-digit' };
+            let datePart;
+
+            if (dueDay.toDateString() === today.toDateString()) {
+                datePart = 'Today';
+            } else if (dueDay.toDateString() === tomorrow.toDateString()) {
+                datePart = 'Tomorrow';
+            } else if (dueDate < now && !isToday) { // Only mark "Past Due" if not today and in the past
+                datePart = 'Past Due';
+            } else {
+                const dayMonthOptions = { month: 'short', day: 'numeric' };
+                datePart = dueDate.toLocaleDateString('en-US', dayMonthOptions);
+            }
+
+            const timePart = dueDate.getHours() || dueDate.getMinutes() ? ` ${dueDate.toLocaleTimeString('en-US', timeOptions)}` : '';
+            return `${datePart}${timePart}`;
         }
 
         // Check if a list is predefined (cannot be edited/deleted)
         function isPredefinedList(listName) {
-            const predefinedNames = predefinedListConfig.map(l => l.name);
-            return predefinedNames.includes(listName) || listName === 'All';
+            // Include 'All', and new system views in the list of non-editable/deletable names
+            const systemViewNames = ['All', 'My Day', 'Important', 'Planned', 'Completed', 'Overdue'];
+            return systemViewNames.includes(listName);
         }
 
-        // Function to render all navigation lists in the sidebar
-        async function renderNavLists() {
-            navListsElem.innerHTML = ''; // Clear existing lists
+        // Debounce function for search
+        function debounce(func, delay) {
+            let timeout;
+            return function(...args) {
+                const context = this;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), delay);
+            };
+        }
 
+        // Toast Notification System
+        function showToast(message, type = 'info', duration = 3000) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.classList.add('toast-message', type);
+
+            let iconClass = '';
+            if (type === 'success') iconClass = 'fas fa-check-circle';
+            else if (type === 'error') iconClass = 'fas fa-times-circle';
+            else iconClass = 'fas fa-info-circle';
+
+            toast.innerHTML = `<i class="${iconClass}"></i><span>${message}</span>`;
+            container.appendChild(toast);
+
+            // Trigger animation
+            setTimeout(() => {
+                toast.style.opacity = '1';
+                toast.style.transform = 'translateX(0)';
+            }, 10); // Small delay to allow CSS transition
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                toast.addEventListener('transitionend', () => toast.remove());
+            }, duration);
+        }
+
+        // Modal Logic
+        function showModal(modalId, errorMessageId = null) {
+            const modal = document.getElementById(modalId);
+            modal.classList.add('active');
+            // Clear previous errors
+            if (errorMessageId) {
+                const errorElem = document.getElementById(errorMessageId);
+                if (errorElem) errorElem.style.display = 'none';
+            }
+        }
+
+        function hideModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('active');
+        }
+
+        async function renderNavLists() {
+            const currentActive = document.querySelector('.nav-item.active')?.dataset.listFilter || currentListFilter;
+            
             try {
                 const response = await fetch(API_LISTS_SUMMARY_URL, { headers: getAuthHeaders() });
                 if (response.status === 401) return logout();
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const { listCounts, importantCount, totalCount, userName } = await response.json();
-                if (userName) document.querySelector('.user-info h3').textContent = userName;
+                const { listCounts, importantCount, completedCount, overdueCount, totalCount, userName, tagline } = await response.json();
+                
+                if (userName) document.getElementById('profile-name').textContent = userName;
+                const taglineElem = document.getElementById('profile-tagline');
+                if (tagline) {
+                    taglineElem.textContent = tagline;
+                } else if (!taglineElem.textContent || taglineElem.textContent === 'MCA Project') { // Default value for fresh state
+                    taglineElem.textContent = quotes[Math.floor(Math.random() * quotes.length)];
+                }
 
-                // Create a Map to track lists and avoid duplicates
+                // Map to hold all navigation items
                 const navItemsMap = new Map();
 
-                // 1. Add Predefined Lists first
+                // Add predefined lists with their specific counts
                 predefinedListConfig.forEach(list => {
-                    const countEntry = listCounts.find(lc => lc.name === list.name);
-                    navItemsMap.set(list.name, {
-                        ...list,
-                        count: countEntry ? countEntry.count : 0
-                    });
+                    let count = 0;
+                    if (list.name === 'All') count = totalCount;
+                    else if (list.name === 'Important') count = importantCount;
+                    else if (list.name === 'Completed') count = completedCount; // NEW
+                    else if (list.name === 'Overdue') count = overdueCount;     // NEW
+                    else {
+                        // For 'My Day' and 'Planned' and other custom lists,
+                        // get count from listCounts (which now only aggregates incomplete tasks for `list` property)
+                        const countEntry = listCounts.find(lc => lc.name === list.name);
+                        count = countEntry ? countEntry.count : 0;
+                    }
+                    navItemsMap.set(list.name, { ...list, count: count || 0 });
                 });
 
-                // 2. Add "All" list
-                navItemsMap.set('All', { name: 'All', icon: 'fas fa-stream', count: totalCount });
-
-                // 3. Add Custom Lists from backend (excluding predefined ones and special categories)
+                // Add Custom Lists from backend (excluding predefined ones)
                 listCounts.forEach(lc => {
-                    if (lc.name && !navItemsMap.has(lc.name) && lc.name !== 'Important' && lc.name !== 'All') {
+                    const isSystemView = isPredefinedList(lc.name); // Use the updated helper
+                    if (lc.name && !navItemsMap.has(lc.name) && !isSystemView) {
                         navItemsMap.set(lc.name, {
                             name: lc.name,
-                            icon: 'fas fa-list',
+                            icon: 'fas fa-list', // Default icon for custom lists
                             count: lc.count
                         });
                     }
                 });
 
-                // Update 'Important' count specifically (it's already in the map via predefined config)
-                if (navItemsMap.has('Important')) {
-                    navItemsMap.get('Important').count = importantCount;
-                }
+                // Sort all nav items: Predefined (My Day, Important, Planned, Completed, Overdue), then All, then custom alphabetically
+                const predefinedOrder = ['My Day', 'Important', 'Planned', 'Completed', 'Overdue', 'All'];
+                const sortedNavItems = Array.from(navItemsMap.values()).sort((a, b) => {
+                    let indexA = predefinedOrder.indexOf(a.name);
+                    let indexB = predefinedOrder.indexOf(b.name);
 
-                const allNavItems = Array.from(navItemsMap.values());
+                    if (indexA !== -1 && indexB !== -1) { // Both are system views
+                        return indexA - indexB;
+                    }
+                    if (indexA === -1 && indexB === -1) { // Both are custom lists
+                        return a.name.localeCompare(b.name);
+                    }
+                    if (indexA !== -1) return -1; // A is a system view, comes first
+                    return 1; // B is a system view, comes first
+                });
 
-                allNavItems.forEach(list => {
+                navListsElem.innerHTML = ''; // Clear for fresh render
+                newTodoListSelect.innerHTML = ''; // Clear for fresh render of list selector in add task
+                let defaultListOption = document.createElement('option');
+                defaultListOption.value = 'My Day';
+                defaultListOption.textContent = 'My Day';
+                newTodoListSelect.appendChild(defaultListOption);
+
+
+                sortedNavItems.forEach(list => {
                     const listItem = document.createElement('li');
                     listItem.classList.add('nav-item');
                     if (list.name === currentListFilter) {
                         listItem.classList.add('active');
                     }
                     listItem.dataset.listFilter = list.name;
+                    // For system views, always show count regardless if 0 for consistency
+                    const alwaysShowCount = isPredefinedList(list.name);
                     const countId = `count-${list.name.replace(/\s/g, '-')}`;
                     listItem.innerHTML = `
                         <i class="${list.icon}"></i>
                         <span class="list-name">${list.name}</span>
-                        <span class="list-count" id="${countId}" style="display: ${list.count > 0 ? 'inline-block' : 'none'};">${list.count}</span>
+                        <span class="list-count" id="${countId}" style="display: ${list.count > 0 || alwaysShowCount ? 'inline-block' : 'none'};">${list.count}</span>
                     `;
                     navListsElem.appendChild(listItem);
+
+                    // Populate the list selector in the add-task section, excluding 'All', 'Important', 'Completed', 'Overdue', 'Planned'
+                    // The selector is for assigning tasks to *actual* lists.
+                    if (!isPredefinedList(list.name) || list.name === 'My Day') { // 'My Day' is a default list, so it's assignable
+                        let option = document.createElement('option');
+                        option.value = list.name;
+                        option.textContent = list.name;
+                        newTodoListSelect.appendChild(option);
+                    }
                 });
+                // Set the default list for new tasks. If currentListFilter is a custom list or 'My Day', use that.
+                // Otherwise, default to 'My Day'.
+                if (!isPredefinedList(currentListFilter) || currentListFilter === 'My Day') {
+                    if (newTodoListSelect.querySelector(`option[value="${currentListFilter}"]`)) {
+                        newTodoListSelect.value = currentListFilter;
+                    } else {
+                        newTodoListSelect.value = 'My Day';
+                    }
+                } else {
+                    newTodoListSelect.value = 'My Day';
+                }
 
             } catch (error) {
                 console.error('Error rendering nav lists:', error);
-                alert('Failed to load lists. Please ensure the backend server is running and accessible.');
+                showToast('Failed to load lists: ' + error.message, 'error');
             }
         }
 
 
-        async function loadTodos() {
+        async function loadTodos(isSearch = false) {
             if (!getToken()) { authOverlay.style.display = 'flex'; return; }
             try {
-                const url = currentListFilter === 'All'
-                    ? API_TODOS_URL
-                    : `${API_TODOS_URL}?list=${encodeURIComponent(currentListFilter)}`;
+                let url;
+                if (isSearch && currentSearchQuery) {
+                    url = `${API_SEARCH_URL}?q=${encodeURIComponent(currentSearchQuery)}`;
+                } else if (currentListFilter === 'All') {
+                    url = API_TODOS_URL;
+                } else {
+                    // For 'My Day', 'Important', 'Planned', 'Completed', 'Overdue', and custom lists
+                    url = `${API_TODOS_URL}?list=${encodeURIComponent(currentListFilter)}`;
+                }
 
                 const response = await fetch(url, { headers: getAuthHeaders() });
                 if (response.status === 401) return logout();
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.error}`);
+                }
                 const todos = await response.json();
 
                 todoListElem.innerHTML = '';
+                searchResultsMessage.style.display = 'none';
+                emptyMessage.style.display = 'none';
+
+                if (isSearch) {
+                    searchResultsMessage.textContent = `Search results for "${currentSearchQuery}"`;
+                    searchResultsMessage.style.display = 'block';
+                }
 
                 if (todos.length === 0) {
+                    emptyMessage.textContent = isSearch ? 'No tasks found matching your search.' : 'No tasks yet! Add one above.';
                     emptyMessage.style.display = 'block';
                 } else {
-                    emptyMessage.style.display = 'none';
                     todos.forEach(todo => renderTodo(todo));
                 }
 
-                await renderNavLists(); // Re-render nav lists to update counts
-                updateListOptionsMenuState(); // Update menu visibility/state
+                // Only update nav lists if not a search operation
+                if (!isSearch) {
+                    await renderNavLists(); // Re-render nav lists to update counts
+                    updateListOptionsMenuState(); // Update menu visibility/state
+                }
             } catch (error) {
                 console.error('Error loading todos:', error);
-                alert('Failed to load tasks. Please ensure the backend server is running and accessible.');
+                showToast('Failed to load tasks: ' + error.message, 'error');
             }
         }
 
         function renderTodo(todo) {
             const listItem = document.createElement('li');
-            listItem.classList.add('todo-item');
-            if (todo.completed) {
-                listItem.classList.add('completed');
-            }
+            listItem.classList.add('todo-item', 'fade-in'); // Added fade-in animation
+            if (todo.completed) listItem.classList.add('completed');
+            
             listItem.dataset.id = todo._id;
+            listItem.dataset.dueDate = todo.dueDate || '';
+
             if (todo.color && todo.color !== 'transparent') {
-                listItem.style.backgroundColor = todo.color;
+                listItem.style.borderLeft = `6px solid ${todo.color}`;
             }
+
+            const dueDateObj = todo.dueDate ? new Date(todo.dueDate) : null;
+            const isOverdue = dueDateObj && !todo.completed && dueDateObj < new Date(new Date().setHours(0,0,0,0)); // Check if past today's start
 
             listItem.innerHTML = `
                 <label class="checkbox-container">
                     <input type="checkbox" ${todo.completed ? 'checked' : ''} data-action="toggle-complete">
                 </label>
-                <button class="important-btn ${todo.isImportant ? 'active' : ''}" data-action="toggle-important" title="${todo.isImportant ? 'Unpin' : 'Pin note'}">
-                    <i class="fas fa-thumbtack"></i>
+                <button class="important-btn ${todo.isImportant ? 'active' : ''}" data-action="toggle-important" title="${todo.isImportant ? 'Unpin Task' : 'Pin Task'}">
+                    <i class="${todo.isImportant ? 'fas fa-star' : 'far fa-star'}"></i>
                 </button>
                 <div class="todo-info">
-                    <span class="todo-text" style="font-weight: 600; font-size: 1.1rem; margin-bottom: 8px;">${todo.text}</span>
-                    ${todo.subText ? `<span class="todo-subtext" style="color: var(--text-dark); opacity: 0.8;">${todo.subText}</span>` : ''}
+                    <span class="todo-text">${todo.text}</span>
+                    ${todo.subText ? `<span class="todo-subtext">${todo.subText}</span>` : ''}
+                    ${todo.dueDate ? `<span class="todo-date ${isOverdue ? 'overdue' : ''}"><i class="far fa-calendar-alt"></i> ${formatDueDate(todo.dueDate)}</span>` : ''}
                 </div>
                 <div class="actions">
-                    <button class="edit-btn" data-action="edit" title="Edit"><i class="fas fa-edit"></i></button>
-                    <button class="delete-btn" data-action="delete" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                    <button class="edit-btn" data-action="edit" title="Edit"><i class="fas fa-pencil-alt"></i></button>
+                    <button class="delete-btn" data-action="delete" title="Delete"><i class="fas fa-trash"></i></button>
                 </div>
             `;
             todoListElem.appendChild(listItem);
@@ -1114,22 +1774,118 @@
 
         // --- Event Listeners ---
 
+        // Expand/Collapse add task input
+        newTodoInput.addEventListener('focus', () => {
+            addTaskSection.classList.add('expanded');
+        });
+
+        // Only collapse if main input is empty AND no other fields have values
+        addTaskSection.addEventListener('focusout', (event) => {
+            // Check if the focus goes outside the entire addTaskSection
+            if (!addTaskSection.contains(event.relatedTarget)) {
+                if (newTodoInput.value.trim() === '' &&
+                    newTodoSubtext.value.trim() === '' &&
+                    newTodoDuedate.value === '' &&
+                    selectedNewTodoColor === 'transparent') { // Check color as well
+                    addTaskSection.classList.remove('expanded');
+                }
+            }
+        });
+
+        // Color picker logic for new task input
+        newTodoColorPicker.addEventListener('click', (event) => {
+            const swatch = event.target.closest('.color-swatch');
+            if (swatch) {
+                document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+                swatch.classList.add('active');
+                selectedNewTodoColor = swatch.dataset.color;
+            }
+        });
+
+        // Debounced search input handler
+        const debouncedSearch = debounce(async (query) => {
+            currentSearchQuery = query;
+            if (query.length > 0) {
+                currentListTitle.textContent = `Search Results for "${query}"`; // Update title for search
+                await loadTodos(true);
+            } else {
+                currentSearchQuery = null;
+                // If search input is cleared, go back to current list filter
+                const activeNavItem = document.querySelector(`.nav-item.active .list-name`);
+                currentListTitle.textContent = activeNavItem ? activeNavItem.textContent : currentListFilter;
+                await loadTodos(false);
+            }
+        }, 300); // 300ms debounce
+
+        globalSearchInput.addEventListener('input', (event) => {
+            debouncedSearch(event.target.value.trim());
+        });
+
+        searchToggleBtn.addEventListener('click', () => {
+            searchInputContainer.classList.add('active');
+            globalSearchInput.focus();
+            currentSearchQuery = null; // Clear previous search when opening
+            globalSearchInput.value = '';
+            searchResultsMessage.style.display = 'none';
+            emptyMessage.style.display = 'none'; // Hide generic empty message
+            todoListElem.innerHTML = ''; // Clear tasks while searching
+            // Hide list options menu if open
+            listOptionsMenu.style.display = 'none';
+        });
+
+        closeSearchBtn.addEventListener('click', () => {
+            searchInputContainer.classList.remove('active');
+            globalSearchInput.value = '';
+            currentSearchQuery = null;
+            loadTodos(); // Reload tasks for the currently selected list
+        });
+
+
         newTodoInput.addEventListener('keypress', async (event) => {
             if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent default form submission behavior
+
                 const text = newTodoInput.value.trim();
+                const subText = newTodoSubtext.value.trim();
+                const dueDate = newTodoDuedate.value; // Will be ISO string or empty
+                const color = selectedNewTodoColor;
+                const assignedList = newTodoListSelect.value;
+
                 if (text === '') {
-                    alert('Task cannot be empty!');
+                    showToast('Task cannot be empty!', 'error');
                     return;
                 }
 
-                let assignedListForNewTodo = 'My Day';
-                let isNewTodoImportant = false;
+                let finalAssignedList = assignedList;
+                let isImportantForNewTodo = false;
+                let newTodoCompletedStatus = false;
 
+                // Adjust properties based on current list context for convenience
                 if (currentListFilter === 'Important') {
-                    isNewTodoImportant = true;
-                    assignedListForNewTodo = 'My Day'; // Important tasks are still assigned to a regular list
-                } else if (currentListFilter !== 'All') {
-                    assignedListForNewTodo = currentListFilter;
+                    isImportantForNewTodo = true;
+                    // If adding from 'Important' view, still assign to a physical list (My Day by default)
+                    // and mark as important.
+                    finalAssignedList = assignedList; 
+                } else if (currentListFilter === 'Planned') {
+                    // If creating from Planned list, ensure it has a due date
+                    if (!dueDate) {
+                        showToast('Tasks in "Planned" list require a due date.', 'error');
+                        return;
+                    }
+                    finalAssignedList = assignedList;
+                } else if (currentListFilter === 'Completed') { // NEW
+                    newTodoCompletedStatus = true;
+                    finalAssignedList = assignedList;
+                } else if (isPredefinedList(currentListFilter) && currentListFilter !== 'My Day') {
+                    // If user is in any other system view (like Overdue, All) except My Day
+                    // and tries to add a task, it should go to 'My Day' by default.
+                    finalAssignedList = 'My Day';
+                } else if (!isPredefinedList(currentListFilter)) {
+                    // If user is in a custom list, assign task to that list
+                    finalAssignedList = currentListFilter;
+                } else {
+                    // Default case, for 'My Day' or 'All'
+                    finalAssignedList = 'My Day';
                 }
 
                 try {
@@ -1138,17 +1894,40 @@
                         headers: getAuthHeaders(),
                         body: JSON.stringify({
                             text,
-                            list: assignedListForNewTodo,
-                            isImportant: isNewTodoImportant
+                            subText,
+                            dueDate: dueDate ? new Date(dueDate).toISOString() : null,
+                            color,
+                            list: finalAssignedList,
+                            isImportant: isImportantForNewTodo,
+                            completed: newTodoCompletedStatus // NEW
                         }),
                     });
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.details || errorData.error}`);
+                    }
+                    showToast('Task added successfully!', 'success');
                     newTodoInput.value = '';
+                    newTodoSubtext.value = '';
+                    newTodoDuedate.value = '';
+                    selectedNewTodoColor = 'transparent'; // Reset color
+                    newTodoListSelect.value = 'My Day'; // Reset list selection
+                    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+                    document.querySelector('.color-swatch[data-color="transparent"]').classList.add('active');
+
+                    // If all fields are empty, collapse the input
+                    if (newTodoInput.value.trim() === '' &&
+                        newTodoSubtext.value.trim() === '' &&
+                        newTodoDuedate.value === '' &&
+                        selectedNewTodoColor === 'transparent') {
+                        addTaskSection.classList.remove('expanded');
+                    }
+
                     await loadTodos(); // Reload all to update list counts and display
                     todoListElem.scrollTop = todoListElem.scrollHeight;
                 } catch (error) {
                     console.error('Error adding todo:', error);
-                    alert('Failed to add task.');
+                    showToast('Failed to add task: ' + error.message, 'error');
                 }
             }
         });
@@ -1166,7 +1945,10 @@
             try {
                 if (action === 'toggle-complete') {
                     const currentTodoResponse = await fetch(`${API_TODOS_URL}/${id}`, { headers: getAuthHeaders() });
-                    if (!currentTodoResponse.ok) throw new Error(`HTTP error! status: ${currentTodoResponse.status}`);
+                    if (!currentTodoResponse.ok) {
+                        const errorData = await currentTodoResponse.json();
+                        throw new Error(`HTTP error! status: ${currentTodoResponse.status}, message: ${errorData.error}`);
+                    }
                     const currentTodo = await currentTodoResponse.json();
                     const newCompletedStatus = !currentTodo.completed;
 
@@ -1175,11 +1957,18 @@
                         headers: getAuthHeaders(),
                         body: JSON.stringify({ completed: newCompletedStatus }),
                     });
-                    if (!updateResponse.ok) throw new Error(`HTTP error! status: ${updateResponse.status}`);
-                    await loadTodos();
+                    if (!updateResponse.ok) {
+                        const errorData = await updateResponse.json();
+                        throw new Error(`HTTP error! status: ${updateResponse.status}, message: ${errorData.error}`);
+                    }
+                    showToast('Task status updated!', 'info');
+                    await loadTodos(currentSearchQuery ? true : false);
                 } else if (action === 'toggle-important') {
                     const currentTodoResponse = await fetch(`${API_TODOS_URL}/${id}`, { headers: getAuthHeaders() });
-                    if (!currentTodoResponse.ok) throw new Error(`HTTP error! status: ${currentTodoResponse.status}`);
+                    if (!currentTodoResponse.ok) {
+                        const errorData = await currentTodoResponse.json();
+                        throw new Error(`HTTP error! status: ${currentTodoResponse.status}, message: ${errorData.error}`);
+                    }
                     const currentTodo = await currentTodoResponse.json();
                     const newImportantStatus = !currentTodo.isImportant;
 
@@ -1188,57 +1977,81 @@
                         headers: getAuthHeaders(),
                         body: JSON.stringify({ isImportant: newImportantStatus }),
                     });
-                    if (!updateResponse.ok) throw new Error(`HTTP error! status: ${updateResponse.status}`);
-                    await loadTodos();
+                    if (!updateResponse.ok) {
+                        const errorData = await updateResponse.json();
+                        throw new Error(`HTTP error! status: ${updateResponse.status}, message: ${errorData.error}`);
+                    }
+                    showToast(`Task marked as ${newImportantStatus ? 'important' : 'unimportant'}!`, 'info');
+                    await loadTodos(currentSearchQuery ? true : false);
                 } else if (action === 'edit') {
                     const todoInfoDiv = listItem.querySelector('.todo-info');
                     const todoTextSpan = listItem.querySelector('.todo-text');
                     const todoSubtextSpan = listItem.querySelector('.todo-subtext');
+                    const todoDateSpan = listItem.querySelector('.todo-date');
 
                     const originalText = todoTextSpan ? todoTextSpan.textContent : '';
                     const originalSubtext = todoSubtextSpan ? todoSubtextSpan.textContent : '';
+
+                    // Fetch the full todo to get actual dueDate in ISO format for datetime-local input
+                    const currentTodoResponse = await fetch(`${API_TODOS_URL}/${id}`, { headers: getAuthHeaders() });
+                    if (!currentTodoResponse.ok) {
+                        const errorData = await currentTodoResponse.json();
+                        throw new Error(`HTTP error! status: ${currentTodoResponse.status}, message: ${errorData.error}`);
+                    }
+                    const fullTodo = await currentTodoResponse.json();
+                    const originalFullDueDate = fullTodo.dueDate ? new Date(fullTodo.dueDate).toISOString().slice(0, 16) : ''; // Format for datetime-local
 
                     const textInput = document.createElement('input');
                     textInput.type = 'text';
                     textInput.value = originalText;
                     textInput.classList.add('edit-input');
 
-                    const subtextInput = document.createElement('input');
-                    subtextInput.type = 'text';
+                    const subtextInput = document.createElement('textarea');
                     subtextInput.value = originalSubtext;
-                    subtextInput.classList.add('edit-input');
+                    subtextInput.classList.add('edit-textarea');
                     subtextInput.placeholder = 'Add sub-text (optional)';
+
+                    const dueDateInput = document.createElement('input');
+                    dueDateInput.type = 'datetime-local';
+                    dueDateInput.value = originalFullDueDate;
+                    dueDateInput.classList.add('edit-datetime');
 
                     todoInfoDiv.innerHTML = '';
                     todoInfoDiv.appendChild(textInput);
                     todoInfoDiv.appendChild(subtextInput);
+                    todoInfoDiv.appendChild(dueDateInput);
 
                     textInput.focus();
                     textInput.select();
 
                     let isSaving = false;
                     const saveEdit = async (event) => {
-                        // Prevent multiple saves or interference when switching between inputs
                         if (isSaving) return;
 
-                        // Check if the relatedTarget (where focus is going) is one of our inputs
-                        if (event && (event.relatedTarget === textInput || event.relatedTarget === subtextInput)) {
+                        // Check if the focus goes to another input within the same todo item
+                        if (event && (event.relatedTarget === textInput || event.relatedTarget === subtextInput || event.relatedTarget === dueDateInput)) {
                             return;
                         }
 
                         isSaving = true;
                         const newText = textInput.value.trim();
                         const newSubtext = subtextInput.value.trim();
+                        const newDueDate = dueDateInput.value; // ISO string or empty
                         let changes = {};
 
                         if (newText === '') {
-                            alert('Task text cannot be empty. Reverting to original.');
-                            await loadTodos();
+                            showToast('Task text cannot be empty. Reverting to original.', 'error');
+                            await loadTodos(currentSearchQuery ? true : false); // Reload to discard changes
                             return;
                         }
 
                         if (newText !== originalText) changes.text = newText;
                         if (newSubtext !== originalSubtext) changes.subText = newSubtext;
+                        // Compare due dates - convert both to proper format or null for comparison
+                        const currentDueDateFormatted = fullTodo.dueDate ? new Date(fullTodo.dueDate).toISOString().slice(0, 16) : '';
+                        if (newDueDate !== currentDueDateFormatted) {
+                            changes.dueDate = newDueDate ? new Date(newDueDate).toISOString() : null;
+                        }
 
                         try {
                             if (Object.keys(changes).length > 0) {
@@ -1247,50 +2060,59 @@
                                     headers: getAuthHeaders(),
                                     body: JSON.stringify(changes),
                                 });
-                                if (!updateResponse.ok) throw new Error(`HTTP error! status: ${updateResponse.status}`);
+                                if (!updateResponse.ok) {
+                                    const errorData = await updateResponse.json();
+                                    throw new Error(`HTTP error! status: ${updateResponse.status}, message: ${errorData.error}`);
+                                }
+                                showToast('Task updated successfully!', 'success');
                             }
-                            await loadTodos();
+                            await loadTodos(currentSearchQuery ? true : false);
                         } catch (error) {
                             console.error('Error saving edit:', error);
-                            alert('Failed to save changes.');
-                            await loadTodos();
+                            showToast('Failed to save changes: ' + error.message, 'error');
+                            await loadTodos(currentSearchQuery ? true : false); // Reload to revert to server state
                         } finally {
                             isSaving = false;
                         }
                     };
 
+                    // Blur events for saving
                     textInput.addEventListener('blur', saveEdit);
                     subtextInput.addEventListener('blur', saveEdit);
+                    dueDateInput.addEventListener('blur', saveEdit);
 
+                    // Keyboard events for navigation/cancel
                     textInput.addEventListener('keydown', (e) => {
-                        if (e.key === 'Enter') {
-                            e.preventDefault();
-                            subtextInput.focus();
-                        } else if (e.key === 'Escape') {
-                            loadTodos();
-                        }
+                        if (e.key === 'Enter') { e.preventDefault(); subtextInput.focus(); }
+                        else if (e.key === 'Escape') { loadTodos(currentSearchQuery ? true : false); }
                     });
                     subtextInput.addEventListener('keydown', (e) => {
-                        if (e.key === 'Enter') {
-                            e.preventDefault();
-                            subtextInput.blur(); // Triggers saveEdit
-                        } else if (e.key === 'Escape') {
-                            loadTodos();
-                        }
+                        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); dueDateInput.focus(); }
+                        else if (e.key === 'Escape') { loadTodos(currentSearchQuery ? true : false); }
+                    });
+                    dueDateInput.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') { e.preventDefault(); dueDateInput.blur(); } // Triggers saveEdit
+                        else if (e.key === 'Escape') { loadTodos(currentSearchQuery ? true : false); }
                     });
 
-                } else if (action === 'delete') {
-                    if (!confirm('Are you sure you want to delete this task?')) return;
-                    const response = await fetch(`${API_TODOS_URL}/${id}`, { 
-                        method: 'DELETE',
+                } else if (action === 'delete') { // Hard delete action
+                    const todoTitle = listItem.querySelector('.todo-text').textContent;
+                    if (!confirm(`Are you absolutely sure you want to delete "${todoTitle}"? This cannot be undone.`)) return;
+                    
+                    const response = await fetch(`${API_TODOS_URL}/${id}`, {
+                        method: 'DELETE', // Now performs hard delete
                         headers: getAuthHeaders()
                     });
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                    await loadTodos();
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.error}`);
+                    }
+                    showToast('Task deleted permanently.', 'info');
+                    await loadTodos(currentSearchQuery ? true : false);
                 }
             } catch (error) {
                 console.error('Error performing action:', error);
-                alert('Failed to update task.');
+                showToast('Failed to update task: ' + error.message, 'error');
             }
         });
 
@@ -1303,6 +2125,11 @@
                 currentListFilter = navItem.dataset.listFilter;
                 currentListTitle.textContent = navItem.querySelector('.list-name').textContent;
                 
+                // Close search if open
+                searchInputContainer.classList.remove('active');
+                globalSearchInput.value = '';
+                currentSearchQuery = null;
+
                 // Close sidebar on mobile
                 sidebar.classList.remove('open');
                 sidebarOverlay.classList.remove('active');
@@ -1311,30 +2138,57 @@
             }
         });
 
+        // Add New List (Modal)
         addNewListBtn.addEventListener('click', () => {
-            const newListName = prompt('Enter name for new list:');
-            if (newListName && newListName.trim() !== '') {
-                const trimmedName = newListName.trim();
-                const allExistingListNames = Array.from(document.querySelectorAll('.nav-lists .list-name'))
-                    .map(el => el.textContent.toLowerCase());
-
-                if (allExistingListNames.includes(trimmedName.toLowerCase())) {
-                    alert('A list with this name already exists!');
-                    return;
-                }
-
-                // If a new list is created this way, we immediately set it as current filter
-                // It will appear in the sidebar once a task is added to it.
-                currentListFilter = trimmedName;
-                currentListTitle.textContent = trimmedName;
-                loadTodos(); // Reload to reflect the new active filter (and re-render nav for potential new list entry)
-            }
+            newListNameInput.value = ''; // Clear input
+            addListModalError.style.display = 'none';
+            showModal('add-list-modal');
         });
+
+        addListConfirmBtn.addEventListener('click', async () => {
+            const newListName = newListNameInput.value.trim();
+            if (newListName === '') {
+                addListModalError.textContent = 'List name cannot be empty.';
+                addListModalError.style.display = 'block';
+                return;
+            }
+            // Client-side check against system view names
+            const systemViewNames = ['All', 'My Day', 'Important', 'Planned', 'Completed', 'Overdue'];
+            if (systemViewNames.map(n => n.toLowerCase()).includes(newListName.toLowerCase())) {
+                addListModalError.textContent = `"${newListName}" is a system view and cannot be used for a custom list.`;
+                addListModalError.style.display = 'block';
+                return;
+            }
+
+            const allExistingListNames = Array.from(document.querySelectorAll('.nav-lists .list-name'))
+                .map(el => el.textContent.toLowerCase());
+
+            if (allExistingListNames.includes(newListName.toLowerCase())) {
+                addListModalError.textContent = 'A list with this name already exists!';
+                addListModalError.style.display = 'block';
+                return;
+            }
+
+            // Backend doesn't have an explicit 'create list' endpoint
+            // A list is implicitly created when a task is assigned to it.
+            // For now, we simulate by setting currentListFilter and reloading.
+            // If the user adds a task to this new list, it will appear.
+            // To make it appear immediately, we could create a dummy task and immediately delete it,
+            // or modify the backend to allow empty list creation. Sticking to implicit for now.
+
+            hideModal('add-list-modal');
+            currentListFilter = newListName;
+            currentListTitle.textContent = newListName;
+            await loadTodos(); // Reload to reflect the new active filter (and re-render nav for potential new list entry)
+            showToast(`List "${newListName}" created (will appear when first task is added).`, 'success');
+        });
+
 
         // --- THEME SWITCHING EVENT LISTENER ---
         themeToggleButton.addEventListener('click', () => {
             currentThemeIndex = (currentThemeIndex + 1) % themes.length;
             applyTheme(currentThemeIndex);
+            showToast('Theme changed!', 'info');
         });
 
         // Sidebar Toggle for Mobile
@@ -1354,52 +2208,88 @@
             toggleListOptionsMenu();
         });
 
-        editListOption.addEventListener('click', async () => {
+        function updateListOptionsMenuState() {
+            const isPredefined = isPredefinedList(currentListFilter);
+            if (isPredefined) {
+                editListOption.classList.add('disabled');
+                deleteListOption.classList.add('disabled');
+            } else {
+                editListOption.classList.remove('disabled');
+                deleteListOption.classList.remove('disabled');
+            }
+        }
+
+        editListOption.addEventListener('click', () => {
             if (editListOption.classList.contains('disabled')) return;
 
-            const oldListName = currentListFilter;
-            const newListName = prompt(`Rename list "${oldListName}" to:`, oldListName);
-
-            if (newListName && newListName.trim() !== '' && newListName.trim() !== oldListName) {
-                const trimmedNewName = newListName.trim();
-                const allExistingListNames = Array.from(document.querySelectorAll('.nav-lists .list-name'))
-                    .map(el => el.textContent.toLowerCase());
-                
-                if (allExistingListNames.includes(trimmedNewName.toLowerCase())) {
-                    alert('A list with this name already exists!');
-                    return;
-                }
-
-                try {
-                    const response = await fetch(`${API_BASE_URL}/lists/${encodeURIComponent(oldListName)}/rename`, {
-                        method: 'PUT',
-                        headers: getAuthHeaders(),
-                        body: JSON.stringify({ newName: trimmedNewName }),
-                    });
-                    if (!response.ok) {
-                         const errorData = await response.json();
-                         throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.error}`);
-                    }
-                    alert(`List "${oldListName}" renamed to "${trimmedNewName}".`);
-                    currentListFilter = trimmedNewName; // Set active filter to new name
-                    loadTodos(); // Reload everything to refresh UI
-                } catch (error) {
-                    console.error('Error renaming list:', error);
-                    alert('Failed to rename list. Please check backend or console for details.');
-                }
-            }
+            renameListNameInput.value = currentListFilter;
+            renameListModalError.style.display = 'none';
+            showModal('rename-list-modal');
             toggleListOptionsMenu(); // Close menu
+        });
+
+        renameListConfirmBtn.addEventListener('click', async () => {
+            const oldListName = currentListFilter;
+            const newListName = renameListNameInput.value.trim();
+
+            if (newListName === '') {
+                renameListModalError.textContent = 'New list name cannot be empty.';
+                renameListModalError.style.display = 'block';
+                return;
+            }
+            if (newListName === oldListName) {
+                hideModal('rename-list-modal');
+                return; // No change needed
+            }
+
+            const allExistingListNames = Array.from(document.querySelectorAll('.nav-lists .list-name'))
+                .map(el => el.textContent.toLowerCase());
+            
+            // Client-side check against system view names
+            const systemViewNames = ['All', 'My Day', 'Important', 'Planned', 'Completed', 'Overdue'];
+            if (systemViewNames.map(n => n.toLowerCase()).includes(newListName.toLowerCase())) {
+                renameListModalError.textContent = `"${newListName}" is a system view and cannot be used for a custom list.`;
+                renameListModalError.style.display = 'block';
+                return;
+            }
+            if (allExistingListNames.includes(newListName.toLowerCase())) {
+                renameListModalError.textContent = 'A list with this name already exists!';
+                renameListModalError.style.display = 'block';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/lists/${encodeURIComponent(oldListName)}/rename`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ newName: newListName }),
+                });
+                if (!response.ok) {
+                     const errorData = await response.json();
+                     throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.error}`);
+                }
+                showToast(`List "${oldListName}" renamed to "${newListName}".`, 'success');
+                currentListFilter = newListName; // Set active filter to new name
+                hideModal('rename-list-modal');
+                await loadTodos(); // Reload everything to refresh UI
+            } catch (error) {
+                console.error('Error renaming list:', error);
+                renameListModalError.textContent = 'Failed to rename list: ' + error.message;
+                renameListModalError.style.display = 'block';
+            }
         });
 
         deleteListOption.addEventListener('click', async () => {
             if (deleteListOption.classList.contains('disabled')) return;
 
-            const listToDelete = currentListFilter;
-            if (!confirm(`Are you sure you want to delete the list "${listToDelete}"? All tasks in this list will be moved to "My Day".`)) {
-                toggleListOptionsMenu(); // Close menu if cancelled
-                return;
-            }
+            deleteListNameDisplay.textContent = currentListFilter;
+            deleteListModalError.style.display = 'none';
+            showModal('delete-list-modal');
+            toggleListOptionsMenu(); // Close menu
+        });
 
+        deleteListConfirmBtn.addEventListener('click', async () => {
+            const listToDelete = currentListFilter;
             try {
                 const response = await fetch(`${API_BASE_URL}/lists/${encodeURIComponent(listToDelete)}`, {
                     method: 'DELETE',
@@ -1409,14 +2299,15 @@
                     const errorData = await response.json();
                     throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.error}`);
                 }
-                alert(`List "${listToDelete}" deleted. Associated tasks moved to "My Day".`);
+                showToast(`List "${listToDelete}" deleted. Associated tasks moved to "My Day".`, 'success');
                 currentListFilter = 'My Day'; // Switch to 'My Day' after deletion
-                loadTodos(); // Reload everything to refresh UI
+                hideModal('delete-list-modal');
+                await loadTodos(); // Reload everything to refresh UI
             } catch (error) {
                 console.error('Error deleting list:', error);
-                alert('Failed to delete list. Please check backend or console for details.');
+                deleteListModalError.textContent = 'Failed to delete list: ' + error.message;
+                deleteListModalError.style.display = 'block';
             }
-            toggleListOptionsMenu(); // Close menu
         });
 
         // Close list options menu if clicking anywhere else on the document
@@ -1429,13 +2320,32 @@
         });
 
 
+        document.getElementById('profile-tagline').addEventListener('blur', async (e) => {
+            const newTagline = e.target.innerText.trim(); // Use innerText for contenteditable
+            try {
+                const response = await fetch(`${API_BASE_URL}/user/profile`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ tagline: newTagline }),
+                });
+                if (response.ok) showToast('Tagline updated!', 'success');
+                else {
+                    const errorData = await response.json();
+                    showToast('Failed to update tagline: ' + (errorData.error || 'Unknown error'), 'error');
+                }
+            } catch (err) {
+                console.error('Tagline update error:', err);
+                showToast('Failed to update tagline.', 'error');
+            }
+        });
+
         // Initial setup on page load
         document.addEventListener('DOMContentLoaded', () => {
             currentDateElem.textContent = getFormattedDate();
 
             const savedThemeIndex = localStorage.getItem('currentThemeIndex');
             if (savedThemeIndex !== null) {
-                currentThemeIndex = parseInt(savedThemeIndex, 10);
+                currentThemeIndex = parseInt(savedThemeIndex, 10) % themes.length;
             }
             applyTheme(currentThemeIndex);
 
