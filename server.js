@@ -40,6 +40,7 @@ const todoSchema = new mongoose.Schema({
     list: { type: String, default: 'My Day' },
     subText: { type: String, default: '' },
     isImportant: { type: Boolean, default: false },
+    color: { type: String, default: 'transparent' },
     createdAt: { type: Date, default: Date.now }
 });
 
@@ -104,6 +105,7 @@ app.get('/todos', auth, async (req, res) => {
             if (list === 'Important') query.isImportant = true;
             else query.list = list;
         }
+        // Pinned (isImportant) items first
         const todos = await Todo.find(query).sort({ isImportant: -1, completed: 1, createdAt: -1 });
         res.json(todos);
     } catch (error) { res.status(500).json({ error: 'Failed to fetch' }); }
@@ -123,7 +125,7 @@ app.put('/todos/:id', auth, async (req, res) => {
     try {
         const data = { ...req.body };
         if (data.list) data.list = data.list.trim();
-        const todo = await Todo.findOneAndUpdate({ _id: req.params.id, userId: req.user._id }, data, { new: true });
+        const todo = await Todo.findOneAndUpdate({ _id: req.params.id, userId: req.user._id }, data, { returnDocument: 'after' });
         if (!todo) return res.status(404).json({ error: 'Not found' });
         res.json(todo);
     } catch (error) { res.status(400).json({ error: 'Failed to update' }); }
@@ -150,20 +152,28 @@ app.get('/lists/summary', auth, async (req, res) => {
     } catch (error) { res.status(500).json({ error: 'Failed to fetch summary' }); }
 });
 
+const PREDEFINED_LISTS = ['My Day', 'Important', 'Planned', 'Work', 'Shopping', 'Personal', 'Learning', 'All'];
+
 app.put('/lists/:oldName/rename', auth, async (req, res) => {
     try {
+        if (PREDEFINED_LISTS.includes(req.params.oldName)) {
+            return res.status(403).json({ error: 'Cannot rename predefined lists' });
+        }
         const newName = req.body.newName ? req.body.newName.trim() : null;
         if (!newName) return res.status(400).json({ error: 'New name required' });
         const result = await Todo.updateMany({ userId: req.user._id, list: req.params.oldName }, { list: newName });
         res.json({ modifiedCount: result.modifiedCount });
-    } catch (error) { res.status(500).send(); }
+    } catch (error) { res.status(500).json({ error: 'Internal Server Error', details: error.message }); }
 });
 
 app.delete('/lists/:name', auth, async (req, res) => {
     try {
+        if (PREDEFINED_LISTS.includes(req.params.name)) {
+            return res.status(403).json({ error: 'Cannot delete predefined lists' });
+        }
         const result = await Todo.updateMany({ userId: req.user._id, list: req.params.name }, { list: 'My Day' });
         res.json({ modifiedCount: result.modifiedCount });
-    } catch (error) { res.status(500).send(); }
+    } catch (error) { res.status(500).json({ error: 'Internal Server Error', details: error.message }); }
 });
 
 
