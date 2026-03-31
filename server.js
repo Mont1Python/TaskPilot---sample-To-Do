@@ -176,6 +176,9 @@ app.delete('/lists/:name', auth, async (req, res) => {
     } catch (error) { res.status(500).json({ error: 'Internal Server Error', details: error.message }); }
 });
 
+app.use(cors({
+    origin: 'https://taskpilot-simple-todo-list.netlify.app/' // Replace with your actual Netlify URL
+}));
 
 // Start the server
 app.listen(PORT, () => {
