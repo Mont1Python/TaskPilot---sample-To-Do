@@ -6,6 +6,7 @@
     <title>Taskpilot - My Unique To-Do List</title>
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;600;700&display=swap');
 
@@ -280,28 +281,29 @@
 
         :root {
             --sidebar-width: 280px;
-            --primary-purple: #6366f1;
-            --secondary-purple: #8b5cf6;
-            --gradient-purple: linear-gradient(135deg, #6366f1, #8b5cf6);
-            --background-light: #f8fafc;
+            --primary-purple: #4f46e5;
+            --secondary-purple: #818cf8;
+            --gradient-purple: linear-gradient(135deg, #4f46e5, #818cf8);
+            --background-light: #f1f5f9;
             --background-white: #ffffff;
-            --hover-color: #f1f5f9;
-            --active-color: #e2e8f0;
-            --text-dark: #1e293b;
+            --hover-color: #e2e8f0;
+            --active-color: #cbd5e1;
+            --text-dark: #0f172a;
             --text-light: #f8fafc;
-            --text-muted: #64748b;
+            --text-muted: #475569;
             --icon-green: #10b981;
             --icon-red: #ef4444;
             --icon-yellow: #f59e0b;
-            --checkbox-border: #cbd5e1;
+            --checkbox-border: #94a3b8;
             --border-color: #e2e8f0;
-            --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
         }
 
         body {
-            font-family: 'Segoe UI', Arial, sans-serif;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             background-color: var(--background-light);
             color: var(--text-dark);
+            line-height: 1.5;
         }
 
         .app-container {
@@ -655,7 +657,7 @@
         }
 
 
-        #todo-list {
+        #card-list-container { /* Renamed from #todo-list */
             list-style: none;
             padding: 20px 40px;
             margin: 0;
@@ -669,13 +671,14 @@
             align-content: start;
         }
         @media (max-width: 480px) {
-            #todo-list {
+            #card-list-container {
                 padding: 10px 15px; /* Reduce todo list padding further */
                 gap: 15px;
             }
         }
 
-        .todo-item {
+        /* Note/To-Do Card Styles */
+        .note-card {
             display: flex;
             flex-direction: column;
             background-color: var(--background-white);
@@ -684,103 +687,90 @@
             border-radius: 12px;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
             position: relative;
-            min-height: 140px;
+            min-height: 120px;
             box-shadow: var(--card-shadow);
+            cursor: pointer; /* Indicate it's clickable */
+            user-select: none; /* Prevent text selection when clicking to open */
         }
 
-        .todo-item:hover {
+        .note-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
         }
 
-        .todo-item.completed {
+        .note-card.completed {
             opacity: 0.7;
             background-color: var(--hover-color);
         }
+        
+        .note-card .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            word-break: break-word;
+            margin-bottom: 8px;
+        }
 
-        .todo-item .checkbox-container {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            margin-right: 0;
+        .note-card .card-content {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            word-break: break-word;
+            margin-bottom: 10px;
+        }
+
+        /* To-Do List Card Specific Styles */
+        .note-card.type-todo .checklist-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: var(--text-dark);
+            line-height: 1.4;
+            word-break: break-word;
+        }
+        .note-card.type-todo .checklist-item input[type="checkbox"] {
+            margin-top: 4px; /* Align checkbox with text baseline */
+            margin-right: 10px;
             flex-shrink: 0;
-            width: 20px;
-            height: 20px;
-            opacity: 0;
-            transition: opacity 0.2s;
-            z-index: 5;
-        }
-
-        .todo-item:hover .checkbox-container, .todo-item.completed .checkbox-container {
-            opacity: 1;
-        }
-        .todo-item .checkbox-container input[type="checkbox"] {
             appearance: none;
             -webkit-appearance: none;
-            width: 20px;
-            height: 20px;
-            border: 2px solid var(--checkbox-border);
-            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            border: 1.5px solid var(--checkbox-border);
+            border-radius: 4px;
             outline: none;
             cursor: pointer;
             transition: background-color 0.2s, border-color 0.2s;
-            position: absolute;
-            top: 0;
-            left: 0;
+            position: relative;
         }
-        .todo-item .checkbox-container input[type="checkbox"]:checked {
+        .note-card.type-todo .checklist-item input[type="checkbox"]:checked {
             background-color: var(--secondary-purple);
             border-color: var(--secondary-purple);
         }
-        .todo-item .checkbox-container input[type="checkbox"]::before {
+        .note-card.type-todo .checklist-item input[type="checkbox"]:checked::before {
             content: '\f00c';
             font-family: 'Font Awesome 6 Free';
             font-weight: 900;
-            font-size: 12px;
+            font-size: 11px;
             color: white;
             position: absolute;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%) scale(0);
-            transition: transform 0.2s ease-in-out;
+            transform: translate(-50%, -50%);
         }
-        .todo-item .checkbox-container input[type="checkbox"]:checked::before {
-            transform: translate(-50%, -50%) scale(1);
-        }
-        .todo-item .checkbox-container input[type="checkbox"]:focus {
-            box-shadow: 0 0 0 2px rgba(37, 117, 252, 0.2);
-        }
-
-
-        .todo-item .todo-info {
+        .note-card.type-todo .checklist-item span.item-text {
             flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            cursor: text;
-            min-width: 0;
-            margin-top: 15px;
-            margin-bottom: 35px;
+            padding-right: 5px; /* Space for potential scrollbar if text is long */
         }
-        .todo-item .todo-info .todo-text {
-            font-size: 1.05rem;
-            font-weight: 600; /* Made slightly bolder */
-            color: var(--text-dark);
-            word-break: break-word;
-        }
-        .todo-item.completed .todo-info .todo-text {
+        .note-card.type-todo .checklist-item.completed span.item-text {
             text-decoration: line-through;
             color: var(--text-muted);
-            font-weight: 400;
         }
-        .todo-item .todo-info .todo-subtext {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-top: 5px; /* Increased margin */
-        }
-        .todo-item .todo-info .todo-date {
+
+        .note-card .card-date {
             font-size: 0.75rem;
             color: var(--text-muted);
-            margin-top: 8px;
+            margin-top: 10px;
             display: flex;
             align-items: center;
             gap: 5px;
@@ -789,69 +779,13 @@
             border-radius: 4px;
             width: fit-content;
         }
-        .todo-item .todo-info .todo-date.overdue {
+        .note-card .card-date.overdue {
             color: #fff;
             background-color: var(--icon-red);
             font-weight: 600;
         }
 
-
-        .todo-item .actions {
-            display: flex;
-            align-items: center;
-            opacity: 0;
-            transition: opacity 0.2s ease-in-out;
-            position: absolute;
-            bottom: 8px;
-            left: 8px;
-            right: 8px;
-            justify-content: flex-start;
-            gap: 4px;
-        }
-
-        .todo-item:hover .actions {
-            opacity: 1;
-        }
-
-        .todo-item .actions button {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 1.1rem;
-            padding: 8px;
-            border-radius: 5px;
-            transition: background-color 0.2s ease, color 0.2s ease;
-            color: var(--text-muted);
-        }
-        .todo-item .actions button:hover {
-            background-color: var(--active-color);
-            color: var(--text-dark);
-        }
-
-        .todo-item .actions .archive-btn, .todo-item .actions .delete-btn {
-            color: var(--icon-red);
-        }
-        .todo-item .actions .archive-btn:hover, .todo-item .actions .delete-btn:hover {
-            background-color: rgba(220, 53, 69, 0.1);
-            color: var(--icon-red);
-        }
-        .todo-item .actions .unarchive-btn {
-            color: var(--icon-green);
-        }
-        .todo-item .actions .unarchive-btn:hover {
-            background-color: rgba(40, 167, 69, 0.1);
-            color: var(--icon-green);
-        }
-
-        .todo-item .actions .edit-btn {
-             color: var(--primary-purple);
-        }
-        .todo-item .actions .edit-btn:hover {
-            background-color: rgba(106, 17, 203, 0.1);
-            color: var(--primary-purple);
-        }
-
-        .todo-item .important-btn {
+        .note-card .important-btn {
             background: none;
             border: none;
             cursor: pointer;
@@ -862,74 +796,42 @@
             padding: 8px;
             border-radius: 50%;
             color: var(--text-muted);
-            transition: color 0.2s ease, opacity 0.2s;
-            opacity: 0;
+            transition: color 0.2s ease, opacity 0.2s, background-color 0.2s;
+            opacity: 0.5; /* Always visible, but faded when unpinned */
             z-index: 5;
         }
-        .todo-item:hover .important-btn, .todo-item .important-btn.active {
+        .note-card .important-btn:hover {
             opacity: 1;
-        }
-        .todo-item .important-btn:hover {
             color: var(--text-dark);
             background-color: rgba(0,0,0,0.05);
         }
-        .todo-item .important-btn.active {
+        .note-card .important-btn.active {
+            opacity: 1;
             color: var(--icon-yellow); /* Kept as is, as --icon-yellow is already theme-aware */
         }
 
-        /* Inline Edit Specific Styles */
-        .todo-item .edit-input {
-            width: 100%;
-            padding: 5px 0;
-            border: none;
-            border-bottom: 1px solid var(--primary-purple);
-            font-family: 'Segoe UI', Arial, sans-serif;
-            font-size: 1.05rem;
-            background: transparent;
-            outline: none;
-            color: var(--text-dark);
+        /* --- Add Task/Note Input (Expanded) --- */
+        .add-task-container {
+            padding: 20px 40px;
+            display: flex;
+            justify-content: center;
+            flex-shrink: 0;
         }
-        .todo-item .edit-textarea {
-            width: 100%;
-            padding: 5px 0;
-            border: none;
-            border-bottom: 1px solid var(--primary-purple);
-            font-family: 'Segoe UI', Arial, sans-serif;
-            font-size: 0.9rem;
-            background: transparent;
-            outline: none;
-            color: var(--text-dark);
-            resize: vertical;
-            min-height: 40px;
-        }
-        .todo-item .edit-datetime {
-            width: 100%;
-            padding: 5px 0;
-            border: none;
-            border-bottom: 1px solid var(--primary-purple);
-            font-family: 'Segoe UI', Arial, sans-serif;
-            font-size: 0.9rem;
-            background: transparent;
-            outline: none;
-            color: var(--text-dark);
-            margin-top: 5px;
-        }
-
-
-        /* --- Add Task Input (Expanded) --- */
         .add-task-section {
-            padding: 15px 20px; /* Slightly adjusted padding */
             background-color: var(--background-white);
             display: flex;
-            flex-direction: column; /* Stack elements vertically */
-            gap: 10px; /* Gap between new input elements */
+            flex-direction: column;
+            gap: 10px;
             flex-shrink: 0;
-            box-shadow: 0 1px 2px 0 rgba(60,64,67,0.302), 0 1px 3px 1px rgba(60,64,67,0.149); /* Default shadow */
+            box-shadow: 0 1px 2px 0 rgba(60,64,67,0.302), 0 1px 3px 1px rgba(60,64,67,0.149);
             border-radius: 8px;
             border: none;
+            max-width: 600px;
+            width: 100%;
+            padding: 15px 20px;
         }
         .add-task-section.expanded {
-            /* No specific shadow change on expanded, already has one */
+            padding-bottom: 20px; /* Adjust padding when expanded */
         }
         .add-task-section .main-input-wrapper {
             display: flex;
@@ -947,11 +849,11 @@
             padding: 10px 0;
             border: none;
             border-bottom: 2px solid transparent;
-            font-size: 1.1rem; /* Slightly larger for main input */
+            font-size: 1.1rem;
             outline: none;
             transition: border-color 0.2s;
             background: none;
-            font-weight: 600; /* Bolder for main input */
+            font-weight: 600;
         }
 
         #new-todo-input::placeholder {
@@ -963,14 +865,14 @@
         }
 
         .add-task-expanded-options {
-            display: none; /* Hidden by default */
+            display: none;
             flex-direction: column;
             gap: 10px;
             padding-top: 10px;
             border-top: 1px solid var(--border-color);
         }
         .add-task-section.expanded .add-task-expanded-options {
-            display: flex; /* Show when expanded */
+            display: flex;
             animation: fadeIn 0.3s ease-out;
         }
 
@@ -1008,6 +910,54 @@
             resize: vertical;
         }
 
+        /* Note/To-Do Type Selector (NEW) */
+        .type-selector {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .type-selector label {
+            margin-bottom: 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: normal;
+            color: var(--text-dark);
+        }
+        .type-selector input[type="radio"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--primary-purple);
+            border-radius: 50%;
+            outline: none;
+            cursor: pointer;
+            position: relative;
+            flex-shrink: 0;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        .type-selector input[type="radio"]:checked {
+            background-color: var(--primary-purple);
+            border-color: var(--primary-purple);
+        }
+        .type-selector input[type="radio"]:checked::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 8px;
+            height: 8px;
+            background-color: white;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .type-selector input[type="radio"]:focus {
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+
         .color-picker {
             display: flex;
             gap: 5px;
@@ -1042,6 +992,55 @@
             transform: translate(-50%, -50%) rotate(45deg);
         }
 
+        /* NEW: Checklist item input in add task section */
+        #new-todo-checklist-items-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .add-checklist-item-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .add-checklist-item-row input[type="text"] {
+            flex-grow: 1;
+            padding: 8px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            background-color: var(--background-light);
+            color: var(--text-dark);
+        }
+        .add-checklist-item-row .remove-item-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1rem;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 5px;
+            transition: background-color 0.2s;
+        }
+        .add-checklist-item-row .remove-item-btn:hover {
+            background-color: var(--hover-color);
+            color: var(--icon-red);
+        }
+        #add-new-checklist-item-btn {
+            background: none;
+            border: none;
+            color: var(--primary-purple);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+            width: fit-content;
+        }
+        #add-new-checklist-item-btn i {
+            margin-right: 5px;
+        }
 
         #empty-message {
             grid-column: 1 / -1;
@@ -1057,6 +1056,402 @@
             font-size: 1.2rem;
             font-weight: 600;
             margin-bottom: -10px;
+        }
+
+        /* Markdown Preview Styles */
+        .markdown-body {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: var(--text-dark);
+            padding: 10px 0;
+        }
+        .markdown-body h1, .markdown-body h2, .markdown-body h3 { margin-top: 1em; margin-bottom: 0.5em; font-weight: 600; }
+        .markdown-body p { margin-bottom: 1em; }
+        .markdown-body code { background: var(--hover-color); padding: 2px 4px; border-radius: 4px; font-family: monospace; }
+        .markdown-body pre { background: var(--hover-color); padding: 15px; border-radius: 8px; overflow-x: auto; margin-bottom: 1em; }
+
+        /* NEW: Detail Editor View */
+        #detail-editor-view {
+            position: fixed; /* Fixed for full screen overlay */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4); /* Backdrop */
+            z-index: 2100;
+            display: none;
+            justify-content: center;
+            align-items: flex-start;
+            overflow-y: auto;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .detail-editor-content {
+            max-width: 800px;
+            width: 100%;
+            background-color: var(--background-white);
+            border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin: auto; /* Center vertically if space allows */
+        }
+
+        @media (max-width: 480px) {
+            #detail-editor-view { padding: 10px; }
+            .detail-editor-content { padding: 15px; border-radius: 0; min-height: 100%; }
+        }
+        @media (max-width: 480px) {
+            .detail-editor-content {
+                padding: 20px;
+                gap: 15px;
+            }
+        }
+
+        #detail-editor-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            border: none;
+            outline: none;
+            width: 100%;
+            padding: 5px 0;
+            border-bottom: 2px solid var(--border-color);
+            background: none;
+            transition: border-color 0.2s;
+            resize: none;
+            line-height: 1.2;
+        }
+        #detail-editor-title:focus {
+            border-color: var(--primary-purple);
+        }
+
+        #detail-editor-note-content, #detail-editor-todo-description {
+            flex-grow: 1;
+            font-size: 1rem;
+            color: var(--text-dark);
+            border: none;
+            outline: none;
+            width: 100%;
+            padding: 5px 0;
+            border-bottom: 1px solid transparent;
+            background: none;
+            transition: border-color 0.2s;
+            resize: vertical;
+            min-height: 100px;
+        }
+        #detail-editor-note-content:focus, #detail-editor-todo-description:focus {
+            border-color: var(--primary-purple);
+        }
+
+        #detail-editor-checklist-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .detail-checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 5px 0;
+            border-bottom: 1px dashed var(--border-color);
+        }
+        .detail-checklist-item:last-of-type {
+            border-bottom: none;
+        }
+
+        .detail-checklist-item input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--checkbox-border);
+            border-radius: 4px;
+            outline: none;
+            cursor: pointer;
+            position: relative;
+            flex-shrink: 0;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        .detail-checklist-item input[type="checkbox"]:checked {
+            background-color: var(--secondary-purple);
+            border-color: var(--secondary-purple);
+        }
+        .detail-checklist-item input[type="checkbox"]:checked::before {
+            content: '\f00c';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            font-size: 12px;
+            color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .detail-checklist-item input[type="text"] {
+            flex-grow: 1;
+            border: none;
+            outline: none;
+            background: none;
+            font-size: 1rem;
+            color: var(--text-dark);
+            padding: 0;
+        }
+        .detail-checklist-item input[type="text"].completed {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+        .detail-checklist-item input[type="text"]:focus {
+            border-bottom: 1px solid var(--primary-purple);
+        }
+
+        .detail-checklist-item .remove-item-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 5px;
+            transition: background-color 0.2s;
+        }
+        .detail-checklist-item .remove-item-btn:hover {
+            background-color: var(--hover-color);
+            color: var(--icon-red);
+        }
+        #add-detail-checklist-item-btn {
+            background: none;
+            border: none;
+            color: var(--primary-purple);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 10px 0;
+            display: flex;
+            align-items: center;
+            width: fit-content;
+            margin-top: 10px;
+        }
+        #add-detail-checklist-item-btn i {
+            margin-right: 8px;
+        }
+
+        #detail-editor-duedate {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            background-color: var(--background-light);
+            color: var(--text-dark);
+            outline: none;
+            transition: border-color 0.2s;
+            margin-top: 10px;
+        }
+        #detail-editor-duedate:focus {
+            border-color: var(--primary-purple);
+        }
+
+        .detail-editor-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap; /* Allow wrapping on small screens */
+            gap: 10px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            margin-top: auto; /* Push to bottom */
+        }
+        .detail-editor-actions .left-actions,
+        .detail-editor-actions .right-actions {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+        .detail-editor-actions button {
+            background: none;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            transition: background-color 0.2s, color 0.2s;
+        }
+        .detail-editor-actions button:hover {
+            background-color: var(--hover-color);
+            color: var(--text-dark);
+        }
+        .detail-editor-actions .btn-primary {
+            background: var(--gradient-purple);
+            color: white;
+            font-weight: 600;
+        }
+        .detail-editor-actions .btn-primary:hover {
+            opacity: 0.9;
+            background: var(--gradient-purple); /* Ensure gradient stays */
+            color: white;
+        }
+        .detail-editor-actions .close-btn {
+            font-weight: 600;
+        }
+        .detail-editor-actions .delete-btn {
+            color: var(--icon-red);
+        }
+        .detail-editor-actions .delete-btn:hover {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: var(--icon-red);
+        }
+        .detail-editor-actions .share-btn {
+            color: var(--primary-purple);
+        }
+        .detail-editor-actions .share-btn:hover {
+            background-color: rgba(99, 102, 241, 0.1);
+            color: var(--primary-purple);
+        }
+
+        /* --- Bulk Action Bar --- */
+        .bulk-action-bar {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background-color: var(--background-white);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            border-radius: 50px;
+            padding: 10px 25px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            z-index: 100;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid var(--border-color);
+        }
+
+        .bulk-action-bar.active {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .bulk-action-bar .selection-info {
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 0.95rem;
+            border-right: 1px solid var(--border-color);
+            padding-right: 15px;
+        }
+
+        .bulk-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .bulk-actions button {
+            background: none;
+            border: none;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            cursor: pointer;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s, color 0.2s;
+            font-size: 1.1rem;
+        }
+
+        .bulk-actions button:hover {
+            background-color: var(--hover-color);
+            color: var(--primary-purple);
+        }
+
+        .bulk-actions button.delete-btn:hover {
+            color: var(--icon-red);
+            background-color: rgba(239, 68, 68, 0.1);
+        }
+
+        #bulk-cancel-btn {
+            width: auto;
+            border-radius: 6px;
+            padding: 0 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        /* Card selection styles */
+        .note-card.selection-mode {
+            padding-left: 45px;
+        }
+
+        .card-selector {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--checkbox-border);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+
+        .note-card.selected .card-selector {
+            background-color: var(--primary-purple);
+            border-color: var(--primary-purple);
+        }
+
+        .note-card.selected .card-selector::after {
+            content: '\f00c';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            color: white;
+            font-size: 12px;
+        }
+
+        .note-card.selected {
+            border-color: var(--primary-purple);
+            background-color: rgba(79, 70, 229, 0.05);
+        }
+
+        /* Detail Editor Color Picker */
+        #detail-color-picker {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        #detail-color-picker .color-swatch {
+            width: 28px; /* Slightly larger in detail view */
+            height: 28px;
+        }
+        #detail-color-picker .color-swatch.active,
+        #detail-color-picker .color-swatch:hover {
+            transform: scale(1.15);
+            box-shadow: 0 0 0 3px var(--primary-purple);
+        }
+
+        /* Detail Editor Type Toggle */
+        #detail-type-toggle {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        #detail-type-toggle label {
+            margin-bottom: 0;
+            font-weight: normal;
+        }
+        #detail-type-toggle input[type="radio"] {
+            width: 20px;
+            height: 20px;
         }
 
 
@@ -1090,7 +1485,7 @@
             .menu-toggle-btn {
                 display: block;
             }
-            #todo-list {
+            #card-list-container {
                 grid-template-columns: 1fr;
                 padding: 15px;
             }
@@ -1100,6 +1495,9 @@
             .main-header h2 {
                 font-size: 1.8rem;
             }
+            .main-header p {
+                font-size: 0.9rem;
+            }
             .header-actions {
                 top: 20px;
                 right: 20px;
@@ -1107,9 +1505,18 @@
             .add-task-container {
                 padding: 15px 20px !important;
             }
-            /* Add-task-section is now controlled by flex-direction: column so it adapts */
             .add-task-section {
                 padding: 10px 15px !important;
+            }
+            .detail-editor-actions {
+                flex-direction: column;
+                align-items: flex-end;
+            }
+            .detail-editor-actions .left-actions,
+            .detail-editor-actions .right-actions {
+                width: 100%;
+                justify-content: flex-end;
+                margin-top: 5px;
             }
         }
     </style>
@@ -1121,22 +1528,22 @@
     <!-- Modals -->
     <div id="add-list-modal" class="modal-overlay">
         <div class="modal-content">
-            <h3>Add New List</h3>
+            <h3>Add New Note Category</h3>
             <div id="add-list-modal-error" class="modal-error"></div>
-            <label for="new-list-name-input">List Name</label>
-            <input type="text" id="new-list-name-input" placeholder="e.g., Groceries, Project X">
+            <label for="new-list-name-input">Category Name</label>
+            <input type="text" id="new-list-name-input" placeholder="e.g., Ideas, Work Notes">
             <div class="modal-buttons">
                 <button class="btn-cancel" onclick="hideModal('add-list-modal')">Cancel</button>
-                <button class="btn-primary" id="add-list-confirm-btn">Add List</button>
+                <button class="btn-primary" id="add-list-confirm-btn">Add Category</button>
             </div>
         </div>
     </div>
 
     <div id="rename-list-modal" class="modal-overlay">
         <div class="modal-content">
-            <h3>Rename List</h3>
+            <h3>Rename Note Category</h3>
             <div id="rename-list-modal-error" class="modal-error"></div>
-            <label for="rename-list-name-input">New List Name</label>
+            <label for="rename-list-name-input">New Category Name</label>
             <input type="text" id="rename-list-name-input" placeholder="Enter new name">
             <div class="modal-buttons">
                 <button class="btn-cancel" onclick="hideModal('rename-list-modal')">Cancel</button>
@@ -1147,10 +1554,10 @@
 
     <div id="delete-list-modal" class="modal-overlay">
         <div class="modal-content">
-            <h3>Delete List</h3>
+            <h3>Delete Note Category</h3>
             <div id="delete-list-modal-error" class="modal-error"></div>
-            <p>Are you sure you want to delete the list "<strong id="delete-list-name-display"></strong>"?</p>
-            <p style="font-size: 0.9em; color: var(--text-muted); margin-top: 10px;">All tasks in this list will be moved to "My Day". This action cannot be undone and will not delete the tasks themselves.</p>
+            <p>Are you sure you want to delete the category "<strong id="delete-list-name-display"></strong>"?</p>
+            <p style="font-size: 0.9em; color: var(--text-muted); margin-top: 10px;">All notes/tasks in this category will be moved to "My Day". This action cannot be undone.</p>
             <div class="modal-buttons">
                 <button class="btn-cancel" onclick="hideModal('delete-list-modal')">Cancel</button>
                 <button class="btn-primary" id="delete-list-confirm-btn">Delete</button>
@@ -1195,7 +1602,7 @@
                 <i class="fas fa-user-circle avatar"></i>
                 <div class="user-info">
                     <h3 id="profile-name">User</h3>
-                    <p id="profile-tagline" contenteditable="true" title="Click to edit tagline">MCA Project</p>
+                    <p id="profile-tagline" contenteditable="true" title="Click to edit tagline">Thoughts?</p>
                 </div>
                 <button onclick="logout()" title="Logout" style="background: none; border: none; cursor: pointer; color: var(--text-muted); margin-left: auto;">
                     <i class="fas fa-sign-out-alt"></i>
@@ -1208,47 +1615,68 @@
 
             <div class="add-list-section">
                 <button id="add-new-list-btn">
-                    <i class="fas fa-plus-circle"></i> New list
+                    <i class="fas fa-plus-circle"></i> New category
                 </button>
             </div>
         </div>
 
-        <!-- Main Content -->
-        <div class="main-content">
+        <!-- Main Content (Default View) -->
+        <div class="main-content" id="main-content-area">
             <div class="main-header">
                 <button id="menu-toggle-btn" class="menu-toggle-btn"><i class="fas fa-bars"></i></button>
                 <h2 id="current-list-title">All</h2>
                 <p id="current-date"></p>
                 <div class="search-input-container" id="search-input-container">
-                    <input type="search" id="global-search-input" placeholder="Search tasks...">
+                    <input type="search" id="global-search-input" placeholder="Search notes and tasks...">
                     <button class="close-search-btn" id="close-search-btn"><i class="fas fa-times"></i></button>
                 </div>
                 <div class="header-actions">
-                    <button id="search-toggle-btn" title="Search"><i class="fas fa-search"></i></button>
-                    <button id="theme-toggle-btn" title="Change Theme"><i class="fas fa-lightbulb"></i></button>
+                    <button id="bulk-select-toggle-btn" title="Select Multiple" aria-label="Toggle multi-select mode"><i class="fas fa-check-square"></i></button>
+                    <button id="search-toggle-btn" title="Search" aria-label="Search notes and tasks"><i class="fas fa-search"></i></button>
+                    <button id="theme-toggle-btn" title="Change Theme" aria-label="Toggle theme mode"><i class="fas fa-lightbulb"></i></button>
                     <!-- More Options Button (with ID) -->
-                    <button id="more-options-btn" title="List Options"><i class="fas fa-ellipsis-h"></i></button>
+                    <button id="more-options-btn" title="Category Options" aria-label="Manage current category"><i class="fas fa-ellipsis-h"></i></button>
 
                     <!-- List Options Dropdown Menu (NEW) -->
                     <ul id="list-options-menu" class="list-options-menu">
-                        <li id="edit-list-option"><i class="fas fa-edit"></i> Edit List</li>
-                        <li id="delete-list-option"><i class="fas fa-trash-alt"></i> Delete List</li>
+                        <li id="edit-list-option"><i class="fas fa-edit"></i> Edit Category</li>
+                        <li id="delete-list-option"><i class="fas fa-trash-alt"></i> Delete Category</li>
                     </ul>
                 </div>
             </div>
 
-            <div class="add-task-container" style="padding: 20px 40px; display: flex; justify-content: center; flex-shrink: 0;">
-                <div class="add-task-section" id="add-task-section" style="max-width: 600px; width: 100%;">
+            <div class="add-task-container" id="add-task-container">
+                <div class="add-task-section" id="add-task-section">
                     <div class="main-input-wrapper">
                         <i class="fas fa-plus add-icon"></i>
-                        <input type="text" id="new-todo-input" placeholder="Take a note...">
+                        <input type="text" id="new-todo-input" placeholder="Take a note or add a to-do list...">
                     </div>
                     <div class="add-task-expanded-options">
                         <div class="input-group">
-                            <label for="new-todo-subtext">Sub-text (optional)</label>
-                            <textarea id="new-todo-subtext" placeholder="Add details or sub-tasks..."></textarea>
+                            <label>Type</label>
+                            <div class="type-selector">
+                                <label>
+                                    <input type="radio" name="new-item-type" value="todo" checked> To-Do List
+                                </label>
+                                <label>
+                                    <input type="radio" name="new-item-type" value="note"> Simple Note
+                                </label>
+                            </div>
                         </div>
-                        <div class="input-group">
+                        <div class="input-group" id="new-todo-subtext-group">
+                            <label for="new-todo-subtext">Content / List Description (optional)</label>
+                            <textarea id="new-todo-subtext" placeholder="Add details..."></textarea>
+                        </div>
+                        <!-- NEW: Checklist items input for 'todo' type -->
+                        <div class="input-group" id="new-todo-checklist-group">
+                            <label>Checklist Items</label>
+                            <div id="new-todo-checklist-items-container">
+                                <!-- Dynamic checklist inputs will go here -->
+                            </div>
+                            <button type="button" id="add-new-checklist-item-btn"><i class="fas fa-plus"></i> Add item</button>
+                        </div>
+
+                        <div class="input-group" id="new-todo-duedate-group">
                             <label for="new-todo-duedate">Due Date (optional)</label>
                             <input type="datetime-local" id="new-todo-duedate">
                         </div>
@@ -1264,27 +1692,105 @@
                             </div>
                         </div>
                         <div class="input-group">
-                            <label for="new-todo-list-select">Add to List</label>
+                            <label for="new-todo-list-select">Add to Category</label>
                             <select id="new-todo-list-select"></select>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <ul id="todo-list">
-                <p id="empty-message">No tasks yet! Add one above.</p>
+            <ul id="card-list-container">
+                <p id="empty-message">No notes or tasks yet! Add one above.</p>
                 <p id="search-results-message" style="display: none;"></p>
-                <!-- To-do items will be dynamically added here -->
+                <!-- Note/To-Do cards will be dynamically added here -->
             </ul>
+
+            <!-- Bulk Action Bar -->
+            <div id="bulk-action-bar" class="bulk-action-bar">
+                <div class="selection-info">
+                    <span id="selected-count">0</span> selected
+                </div>
+                <div class="bulk-actions">
+                    <button id="bulk-pin-btn" title="Toggle Pin"><i class="fas fa-star"></i></button>
+                    <button id="bulk-move-btn" title="Move to Category"><i class="fas fa-folder-open"></i></button>
+                    <button id="bulk-delete-btn" title="Delete Selected" class="delete-btn"><i class="fas fa-trash-alt"></i></button>
+                    <button id="bulk-cancel-btn" title="Cancel Selection">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Detail Editor View -->
+        <div id="detail-editor-view" style="display: none;">
+            <div class="detail-editor-content">
+                <textarea id="detail-editor-title" placeholder="Title"></textarea>
+
+                <div class="input-group" id="detail-editor-type-group">
+                    <label>Type</label>
+                    <div id="detail-type-toggle" class="type-selector">
+                        <label>
+                            <input type="radio" name="detail-item-type" value="todo"> To-Do List
+                        </label>
+                        <label>
+                            <input type="radio" name="detail-item-type" value="note"> Simple Note
+                        </label>
+                    </div>
+                </div>
+
+                <div id="editor-mode-toggle" style="display: flex; gap: 10px; margin-bottom: -10px;">
+                    <button class="mode-btn active" data-mode="edit" style="padding: 5px 10px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--hover-color); cursor: pointer;">Edit</button>
+                    <button class="mode-btn" data-mode="preview" style="padding: 5px 10px; border-radius: 4px; border: 1px solid var(--border-color); background: none; cursor: pointer;">Preview (Markdown)</button>
+                </div>
+
+                <div id="detail-note-container">
+                    <textarea id="detail-editor-note-content" placeholder="Note content... (Supports Markdown)" style="display: none;"></textarea>
+                    <div id="detail-editor-markdown-preview" class="markdown-body" style="display: none; border: 1px solid var(--border-color); padding: 15px; border-radius: 8px;"></div>
+                </div>
+                
+                <div id="detail-editor-todo-section" style="display: none;">
+                    <textarea id="detail-editor-todo-description" placeholder="To-do list description..." style="font-size: 0.9rem; margin-bottom: 10px; width: 100%; border: none; border-bottom: 1px solid var(--border-color); outline: none; background: none; transition: border-color 0.2s;"></textarea>
+                    <div id="detail-editor-checklist-container">
+                        <!-- Checklist items will be dynamically added here -->
+                    </div>
+                    <button type="button" id="add-detail-checklist-item-btn"><i class="fas fa-plus"></i> Add list item</button>
+                    <input type="datetime-local" id="detail-editor-duedate">
+                </div>
+
+                <div class="input-group">
+                    <label>Highlight Color</label>
+                    <div class="color-picker" id="detail-color-picker">
+                        <div class="color-swatch transparent active" data-color="transparent" title="No Color"></div>
+                        <div class="color-swatch" style="background-color: #ffc107;" data-color="#ffc107" title="Yellow"></div>
+                        <div class="color-swatch" style="background-color: #28a745;" data-color="#28a745" title="Green"></div>
+                        <div class="color-swatch" style="background-color: #007bff;" data-color="#007bff" title="Blue"></div>
+                        <div class="color-swatch" style="background-color: #6f42c1;" data-color="#6f42c1" title="Purple"></div>
+                        <div class="color-swatch" style="background-color: #dc3545;" data-color="#dc3545" title="Red"></div>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="detail-editor-category-select">Category</label>
+                    <select id="detail-editor-category-select"></select>
+                </div>
+
+                <div class="detail-editor-actions">
+                    <div class="left-actions">
+                        <button id="detail-pin-btn" title="Pin/Unpin"><i class="fas fa-star"></i></button>
+                        <button id="detail-delete-btn" title="Delete"><i class="fas fa-trash"></i></button>
+                        <button id="detail-share-btn" title="Share"><i class="fas fa-share-alt"></i></button>
+                    </div>
+                    <div class="right-actions">
+                        <button id="detail-save-btn" class="btn-primary">Save</button>
+                        <button id="detail-close-btn" class="close-btn">Close</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        const API_BASE_URL = 'https://taskpilot-sample-to-do.onrender.com'; // Base URL for API (changed to avoid conflict with frontend server)
+        const API_BASE_URL = 'https://taskpilot-sample-to-do.onrender.com';
         const API_TODOS_URL = `${API_BASE_URL}/todos`;
         const API_LISTS_SUMMARY_URL = `${API_BASE_URL}/lists/summary`;
         const API_SEARCH_URL = `${API_BASE_URL}/todos/search`;
-
 
         // Auth elements
         const authOverlay = document.getElementById('auth-overlay');
@@ -1302,7 +1808,7 @@
         const navListsElem = document.getElementById('nav-lists');
         const currentListTitle = document.getElementById('current-list-title');
         const currentDateElem = document.getElementById('current-date');
-        const todoListElem = document.getElementById('todo-list');
+        const cardListContainer = document.getElementById('card-list-container'); // Renamed
         const emptyMessage = document.getElementById('empty-message');
         const addNewListBtn = document.getElementById('add-new-list-btn');
         const themeToggleButton = document.getElementById('theme-toggle-btn');
@@ -1310,22 +1816,31 @@
         const listOptionsMenu = document.getElementById('list-options-menu');
         const editListOption = document.getElementById('edit-list-option');
         const deleteListOption = document.getElementById('delete-list-option');
-        
+        const mainContentArea = document.getElementById('main-content-area'); // New
+
         // Sidebar & Mobile Toggle
         const sidebar = document.getElementById('sidebar');
         const sidebarOverlay = document.getElementById('sidebar-overlay');
         const menuToggleBtn = document.getElementById('menu-toggle-btn');
 
-        // Add Task Input (Expanded) elements
+        // Add Task/Note Input (Expanded) elements
+        const addTaskContainer = document.getElementById('add-task-container'); // New
         const addTaskSection = document.getElementById('add-task-section');
         const newTodoInput = document.getElementById('new-todo-input');
+        const newTodoTypeRadios = document.querySelectorAll('input[name="new-item-type"]');
+        const newTodoSubtextGroup = document.getElementById('new-todo-subtext-group');
         const newTodoSubtext = document.getElementById('new-todo-subtext');
+        const newTodoChecklistGroup = document.getElementById('new-todo-checklist-group'); // New
+        const newTodoChecklistItemsContainer = document.getElementById('new-todo-checklist-items-container'); // New
+        const addNewChecklistItemBtn = document.getElementById('add-new-checklist-item-btn'); // New
+        const newTodoDuedateGroup = document.getElementById('new-todo-duedate-group');
         const newTodoDuedate = document.getElementById('new-todo-duedate');
         const newTodoColorPicker = document.getElementById('new-todo-color-picker');
         const newTodoListSelect = document.getElementById('new-todo-list-select');
         let selectedNewTodoColor = 'transparent';
+        let selectedNewTodoType = 'todo';
 
-        // Modals
+        // Modals (renamed "List" to "Category" in titles)
         const addListModal = document.getElementById('add-list-modal');
         const newListNameInput = document.getElementById('new-list-name-input');
         const addListConfirmBtn = document.getElementById('add-list-confirm-btn');
@@ -1341,6 +1856,18 @@
         const deleteListConfirmBtn = document.getElementById('delete-list-confirm-btn');
         const deleteListModalError = document.getElementById('delete-list-modal-error');
 
+        // Bulk Selection
+        const bulkSelectToggleBtn = document.getElementById('bulk-select-toggle-btn');
+        const bulkActionBar = document.getElementById('bulk-action-bar');
+        const selectedCountElem = document.getElementById('selected-count');
+        const bulkPinBtn = document.getElementById('bulk-pin-btn');
+        const bulkMoveBtn = document.getElementById('bulk-move-btn');
+        const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
+        const bulkCancelBtn = document.getElementById('bulk-cancel-btn');
+
+        let isSelectionMode = false;
+        let selectedIds = new Set();
+
         // Search
         const searchToggleBtn = document.getElementById('search-toggle-btn');
         const searchInputContainer = document.getElementById('search-input-container');
@@ -1349,16 +1876,39 @@
         const searchResultsMessage = document.getElementById('search-results-message');
         let currentSearchQuery = null;
 
+        // NEW: Detail Editor elements
+        const detailEditorView = document.getElementById('detail-editor-view');
+        const detailEditorTitle = document.getElementById('detail-editor-title');
+        const detailEditorTypeRadios = document.querySelectorAll('input[name="detail-item-type"]');
+        const detailEditorNoteContent = document.getElementById('detail-editor-note-content');
+        const detailEditorTodoSection = document.getElementById('detail-editor-todo-section');
+        const detailEditorTodoDescription = document.getElementById('detail-editor-todo-description');
+        const detailEditorChecklistContainer = document.getElementById('detail-editor-checklist-container');
+        const addDetailChecklistItemBtn = document.getElementById('add-detail-checklist-item-btn');
+        const detailEditorDuedate = document.getElementById('detail-editor-duedate');
+        const detailColorPicker = document.getElementById('detail-color-picker');
+        const detailEditorCategorySelect = document.getElementById('detail-editor-category-select');
+        const detailPinBtn = document.getElementById('detail-pin-btn');
+        const detailDeleteBtn = document.getElementById('detail-delete-btn');
+        const detailShareBtn = document.getElementById('detail-share-btn');
+        const detailSaveBtn = document.getElementById('detail-save-btn');
+        const detailCloseBtn = document.getElementById('detail-close-btn');
+
+        let currentEditingCard = null; // Stores the _id of the card being edited in detail view
+        let detailEditorSelectedColor = 'transparent';
+        let detailEditorSelectedType = 'todo';
 
         const predefinedListConfig = [
             { name: 'All', icon: 'fas fa-tasks' },
             { name: 'My Day', icon: 'far fa-sun' },
-            { name: 'Important', icon: 'far fa-star' },
+            { name: 'Important', icon: 'fas fa-star' }, // Changed to thumbtack
             { name: 'Planned', icon: 'far fa-calendar-alt' },
-            { name: 'Completed', icon: 'fas fa-check-double' }, // NEW
-            { name: 'Overdue', icon: 'fas fa-exclamation-triangle' } // NEW
-            // Removed Archive
+            { name: 'Completed', icon: 'fas fa-check-double' },
+            { name: 'Overdue', icon: 'fas fa-exclamation-triangle' }
         ];
+
+        // Ensure this matches backend SYSTEM_VIEW_LIST_NAMES
+        const SYSTEM_VIEW_LIST_NAMES = ['All', 'My Day', 'Important', 'Planned', 'Completed', 'Overdue'];
 
         const quotes = [
             "I’m not lazy, I’m on energy saving mode.",
@@ -1374,31 +1924,25 @@
 
         let currentThemeIndex = 0;
         const themes = [
-            // 4 LIGHT THEMES
-            { // Modern Indigo
-                '--primary-purple': '#6366f1', '--secondary-purple': '#8b5cf6', '--gradient-purple': 'linear-gradient(135deg, #6366f1, #8b5cf6)', '--background-light': '#f8fafc', '--background-white': '#ffffff', '--hover-color': '#f1f5f9', '--active-color': '#e2e8f0', '--text-dark': '#1e293b', '--text-light': '#f8fafc', '--text-muted': '#64748b', '--icon-green': '#10b981', '--icon-red': '#ef4444', '--icon-yellow': '#f59e0b', '--checkbox-border': '#cbd5e1', '--border-color': '#e2e8f0'
+            // Light Themes
+            {
+                '--primary-purple': '#4f46e5', '--secondary-purple': '#818cf8', '--gradient-purple': 'linear-gradient(135deg, #4f46e5, #818cf8)', '--background-light': '#f1f5f9', '--background-white': '#ffffff', '--hover-color': '#e2e8f0', '--active-color': '#cbd5e1', '--text-dark': '#0f172a', '--text-light': '#f8fafc', '--text-muted': '#475569', '--icon-green': '#10b981', '--icon-red': '#ef4444', '--icon-yellow': '#f59e0b', '--checkbox-border': '#94a3b8', '--border-color': '#e2e8f0'
             },
-            { // Soft Sage
-                '--primary-purple': '#059669', '--secondary-purple': '#10b981', '--gradient-purple': 'linear-gradient(135deg, #059669, #10b981)', '--background-light': '#f0fdf4', '--background-white': '#ffffff', '--hover-color': '#dcfce7', '--active-color': '#bbf7d0', '--text-dark': '#064e3b', '--text-light': '#f0fdf4', '--text-muted': '#374151', '--icon-green': '#059669', '--icon-red': '#dc2626', '--icon-yellow': '#d97706', '--checkbox-border': '#86efac', '--border-color': '#dcfce7'
+            {
+                '--primary-purple': '#0891b2', '--secondary-purple': '#22d3ee', '--gradient-purple': 'linear-gradient(135deg, #0891b2, #22d3ee)', '--background-light': '#f0f9ff', '--background-white': '#ffffff', '--hover-color': '#e0f2fe', '--active-color': '#bae6fd', '--text-dark': '#083344', '--text-light': '#f0f9ff', '--text-muted': '#164e63', '--icon-green': '#10b981', '--icon-red': '#ef4444', '--icon-yellow': '#f59e0b', '--checkbox-border': '#7dd3fc', '--border-color': '#e0f2fe'
             },
-            { // Warm Amber
-                '--primary-purple': '#d97706', '--secondary-purple': '#f59e0b', '--gradient-purple': 'linear-gradient(135deg, #d97706, #f59e0b)', '--background-light': '#fffbeb', '--background-white': '#ffffff', '--hover-color': '#fef3c7', '--active-color': '#fde68a', '--text-dark': '#451a03', '--text-light': '#fffbeb', '--text-muted': '#78350f', '--icon-green': '#10b981', '--icon-red': '#ef4444', '--icon-yellow': '#b45309', '--checkbox-border': '#fcd34d', '--border-color': '#fef3c7'
+            {
+                '--primary-purple': '#059669', '--secondary-purple': '#34d399', '--gradient-purple': 'linear-gradient(135deg, #059669, #34d399)', '--background-light': '#f0fdf4', '--background-white': '#ffffff', '--hover-color': '#dcfce7', '--active-color': '#bbf7d0', '--text-dark': '#064e3b', '--text-light': '#f0fdf4', '--text-muted': '#065f46', '--icon-green': '#059669', '--icon-red': '#ef4444', '--icon-yellow': '#f59e0b', '--checkbox-border': '#6ee7b7', '--border-color': '#dcfce7'
             },
-            { // Rose Petal
-                '--primary-purple': '#db2777', '--secondary-purple': '#f472b6', '--gradient-purple': 'linear-gradient(135deg, #db2777, #f472b6)', '--background-light': '#fff1f2', '--background-white': '#ffffff', '--hover-color': '#ffe4e6', '--active-color': '#fecdd3', '--text-dark': '#4c0519', '--text-light': '#fff1f2', '--text-muted': '#881337', '--icon-green': '#10b981', '--icon-red': '#e11d48', '--icon-yellow': '#f59e0b', '--checkbox-border': '#fda4af', '--border-color': '#ffe4e6'
+            // Dark Themes
+            {
+                '--primary-purple': '#6366f1', '--secondary-purple': '#a5b4fc', '--gradient-purple': 'linear-gradient(135deg, #6366f1, #a5b4fc)', '--background-light': '#0f172a', '--background-white': '#1e293b', '--hover-color': '#334155', '--active-color': '#475569', '--text-dark': '#f1f5f9', '--text-light': '#ffffff', '--text-muted': '#94a3b8', '--icon-green': '#34d399', '--icon-red': '#f87171', '--icon-yellow': '#fbbf24', '--checkbox-border': '#475569', '--border-color': '#334155'
             },
-            // 4 DARK THEMES
-            { // Midnight Slate
-                '--primary-purple': '#4f46e5', '--secondary-purple': '#7c3aed', '--gradient-purple': 'linear-gradient(135deg, #4f46e5, #7c3aed)', '--background-light': '#0f172a', '--background-white': '#1e293b', '--hover-color': '#334155', '--active-color': '#475569', '--text-dark': '#f1f5f9', '--text-light': '#ffffff', '--text-muted': '#94a3b8', '--icon-green': '#34d399', '--icon-red': '#f87171', '--icon-yellow': '#fbbf24', '--checkbox-border': '#475569', '--border-color': '#334155'
+            {
+                '--primary-purple': '#ec4899', '--secondary-purple': '#f472b6', '--gradient-purple': 'linear-gradient(135deg, #ec4899, #f472b6)', '--background-light': '#18181b', '--background-white': '#27272a', '--hover-color': '#3f3f46', '--active-color': '#52525b', '--text-dark': '#fafafa', '--text-light': '#ffffff', '--text-muted': '#a1a1aa', '--icon-green': '#4ade80', '--icon-red': '#f87171', '--icon-yellow': '#fbbf24', '--checkbox-border': '#52525b', '--border-color': '#3f3f46'
             },
-            { // Charcoal Deep
-                '--primary-purple': '#2563eb', '--secondary-purple': '#3b82f6', '--gradient-purple': 'linear-gradient(135deg, #2563eb, #3b82f6)', '--background-light': '#171717', '--background-white': '#262626', '--hover-color': '#404040', '--active-color': '#525252', '--text-dark': '#f5f5f5', '--text-light': '#ffffff', '--text-muted': '#a3a3a3', '--icon-green': '#4ade80', '--icon-red': '#f87171', '--icon-yellow': '#fbbf24', '--checkbox-border': '#525252', '--border-color': '#404040'
-            },
-            { // Dark Forest
-                '--primary-purple': '#059669', '--secondary-purple': '#10b981', '--gradient-purple': 'linear-gradient(135deg, #059669, #10b981)', '--background-light': '#064e3b', '--background-white': '#065f46', '--hover-color': '#047857', '--active-color': '#065f46', '--text-dark': '#ecfdf5', '--text-light': '#ffffff', '--text-muted': '#a7f3d0', '--icon-green': '#34d399', '--icon-red': '#f87171', '--icon-yellow': '#fbbf24', '--checkbox-border': '#065f46', '--border-color': '#047857'
-            },
-            { // Deep Violet
-                '--primary-purple': '#7c3aed', '--secondary-purple': '#a78bfa', '--gradient-purple': 'linear-gradient(135deg, #7c3aed, #a78bfa)', '--background-light': '#2e1065', '--background-white': '#4c1d95', '--hover-color': '#5b21b6', '--active-color': '#6d28d9', '--text-dark': '#f5f3ff', '--text-light': '#ffffff', '--text-muted': '#c4b5fd', '--icon-green': '#34d399', '--icon-red': '#f87171', '--icon-yellow': '#fbbf24', '--checkbox-border': '#6d28d9', '--border-color': '#5b21b6'
+            {
+                '--primary-purple': '#f59e0b', '--secondary-purple': '#fbbf24', '--gradient-purple': 'linear-gradient(135deg, #f59e0b, #fbbf24)', '--background-light': '#1c1917', '--background-white': '#292524', '--hover-color': '#44403c', '--active-color': '#57534e', '--text-dark': '#fafaf9', '--text-light': '#ffffff', '--text-muted': '#a8a29e', '--icon-green': '#4ade80', '--icon-red': '#f87171', '--icon-yellow': '#f59e0b', '--checkbox-border': '#57534e', '--border-color': '#44403c'
             }
         ];
 
@@ -1408,7 +1952,6 @@
             for (const property in theme) {
                 document.documentElement.style.setProperty(property, theme[property]);
             }
-            // Save current theme index to localStorage for persistence (UI preference, not task data)
             localStorage.setItem('currentThemeIndex', themeIndex);
         }
 
@@ -1474,36 +2017,30 @@
             if (!dueDateStr) return '';
             const dueDate = new Date(dueDateStr);
             const now = new Date();
-            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-            const dueDay = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
+            const diffTime = dueDate - now;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-            const timeOptions = { hour: 'numeric', minute: '2-digit' };
-            let datePart;
-
-            if (dueDay.toDateString() === today.toDateString()) {
-                datePart = 'Today';
-            } else if (dueDay.toDateString() === tomorrow.toDateString()) {
-                datePart = 'Tomorrow';
-            } else if (dueDate < now && !isToday) { // Only mark "Past Due" if not today and in the past
-                datePart = 'Past Due';
-            } else {
-                const dayMonthOptions = { month: 'short', day: 'numeric' };
-                datePart = dueDate.toLocaleDateString('en-US', dayMonthOptions);
+            if (diffTime < 0) {
+                const overdueDays = Math.abs(diffDays);
+                if (overdueDays === 0) return 'Due today';
+                return `${overdueDays} day${overdueDays > 1 ? 's' : ''} overdue`;
             }
 
-            const timePart = dueDate.getHours() || dueDate.getMinutes() ? ` ${dueDate.toLocaleTimeString('en-US', timeOptions)}` : '';
-            return `${datePart}${timePart}`;
+            if (diffDays === 0) return 'Due today';
+            if (diffDays === 1) return 'Tomorrow';
+            if (diffDays < 30) return `${diffDays} days left`;
+            
+            const diffMonths = Math.floor(diffDays / 30);
+            if (diffMonths < 12) return `${diffMonths} month${diffMonths > 1 ? 's' : ''} left`;
+            
+            const diffYears = Math.floor(diffMonths / 12);
+            return `${diffYears} year${diffYears > 1 ? 's' : ''} left`;
         }
 
-        // Check if a list is predefined (cannot be edited/deleted)
         function isPredefinedList(listName) {
-            // Include 'All', and new system views in the list of non-editable/deletable names
-            const systemViewNames = ['All', 'My Day', 'Important', 'Planned', 'Completed', 'Overdue'];
-            return systemViewNames.includes(listName);
+            return SYSTEM_VIEW_LIST_NAMES.includes(listName);
         }
 
-        // Debounce function for search
         function debounce(func, delay) {
             let timeout;
             return function(...args) {
@@ -1513,7 +2050,6 @@
             };
         }
 
-        // Toast Notification System
         function showToast(message, type = 'info', duration = 3000) {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
@@ -1527,11 +2063,10 @@
             toast.innerHTML = `<i class="${iconClass}"></i><span>${message}</span>`;
             container.appendChild(toast);
 
-            // Trigger animation
             setTimeout(() => {
                 toast.style.opacity = '1';
                 toast.style.transform = 'translateX(0)';
-            }, 10); // Small delay to allow CSS transition
+            }, 10);
 
             setTimeout(() => {
                 toast.style.opacity = '0';
@@ -1540,11 +2075,9 @@
             }, duration);
         }
 
-        // Modal Logic
         function showModal(modalId, errorMessageId = null) {
             const modal = document.getElementById(modalId);
             modal.classList.add('active');
-            // Clear previous errors
             if (errorMessageId) {
                 const errorElem = document.getElementById(errorMessageId);
                 if (errorElem) errorElem.style.display = 'none';
@@ -1562,70 +2095,69 @@
             try {
                 const response = await fetch(API_LISTS_SUMMARY_URL, { headers: getAuthHeaders() });
                 if (response.status === 401) return logout();
-                const { listCounts, importantCount, completedCount, overdueCount, totalCount, userName, tagline } = await response.json();
+                const { listCounts, importantCount, completedCount, plannedCount, overdueCount, totalCount, userName, tagline } = await response.json();
                 
                 if (userName) document.getElementById('profile-name').textContent = userName;
                 const taglineElem = document.getElementById('profile-tagline');
                 if (tagline) {
                     taglineElem.textContent = tagline;
-                } else if (!taglineElem.textContent || taglineElem.textContent === 'MCA Project') { // Default value for fresh state
+                } else if (!taglineElem.textContent || taglineElem.textContent === 'Thoughts?') {
                     taglineElem.textContent = quotes[Math.floor(Math.random() * quotes.length)];
                 }
 
-                // Map to hold all navigation items
                 const navItemsMap = new Map();
 
-                // Add predefined lists with their specific counts
                 predefinedListConfig.forEach(list => {
                     let count = 0;
                     if (list.name === 'All') count = totalCount;
                     else if (list.name === 'Important') count = importantCount;
-                    else if (list.name === 'Completed') count = completedCount; // NEW
-                    else if (list.name === 'Overdue') count = overdueCount;     // NEW
+                    else if (list.name === 'Completed') count = completedCount;
+                    else if (list.name === 'Planned') count = plannedCount;
+                    else if (list.name === 'Overdue') count = overdueCount;
                     else {
-                        // For 'My Day' and 'Planned' and other custom lists,
-                        // get count from listCounts (which now only aggregates incomplete tasks for `list` property)
                         const countEntry = listCounts.find(lc => lc.name === list.name);
                         count = countEntry ? countEntry.count : 0;
                     }
                     navItemsMap.set(list.name, { ...list, count: count || 0 });
                 });
 
-                // Add Custom Lists from backend (excluding predefined ones)
                 listCounts.forEach(lc => {
-                    const isSystemView = isPredefinedList(lc.name); // Use the updated helper
+                    const isSystemView = isPredefinedList(lc.name);
                     if (lc.name && !navItemsMap.has(lc.name) && !isSystemView) {
                         navItemsMap.set(lc.name, {
                             name: lc.name,
-                            icon: 'fas fa-list', // Default icon for custom lists
+                            icon: 'fas fa-folder',
                             count: lc.count
                         });
                     }
                 });
 
-                // Sort all nav items: Predefined (My Day, Important, Planned, Completed, Overdue), then All, then custom alphabetically
                 const predefinedOrder = ['My Day', 'Important', 'Planned', 'Completed', 'Overdue', 'All'];
                 const sortedNavItems = Array.from(navItemsMap.values()).sort((a, b) => {
                     let indexA = predefinedOrder.indexOf(a.name);
                     let indexB = predefinedOrder.indexOf(b.name);
 
-                    if (indexA !== -1 && indexB !== -1) { // Both are system views
+                    if (indexA !== -1 && indexB !== -1) {
                         return indexA - indexB;
                     }
-                    if (indexA === -1 && indexB === -1) { // Both are custom lists
+                    if (indexA === -1 && indexB === -1) {
                         return a.name.localeCompare(b.name);
                     }
-                    if (indexA !== -1) return -1; // A is a system view, comes first
-                    return 1; // B is a system view, comes first
+                    if (indexA !== -1) return -1;
+                    return 1;
                 });
 
-                navListsElem.innerHTML = ''; // Clear for fresh render
-                newTodoListSelect.innerHTML = ''; // Clear for fresh render of list selector in add task
-                let defaultListOption = document.createElement('option');
-                defaultListOption.value = 'My Day';
-                defaultListOption.textContent = 'My Day';
-                newTodoListSelect.appendChild(defaultListOption);
+                navListsElem.innerHTML = '';
+                newTodoListSelect.innerHTML = '';
+                detailEditorCategorySelect.innerHTML = ''; // Also clear for detail editor
 
+                let myDayOption = document.createElement('option');
+                myDayOption.value = 'My Day';
+                myDayOption.textContent = 'My Day';
+                newTodoListSelect.appendChild(myDayOption.cloneNode(true));
+                detailEditorCategorySelect.appendChild(myDayOption.cloneNode(true));
+
+                const addedCategories = new Set(['My Day']);
 
                 sortedNavItems.forEach(list => {
                     const listItem = document.createElement('li');
@@ -1634,7 +2166,6 @@
                         listItem.classList.add('active');
                     }
                     listItem.dataset.listFilter = list.name;
-                    // For system views, always show count regardless if 0 for consistency
                     const alwaysShowCount = isPredefinedList(list.name);
                     const countId = `count-${list.name.replace(/\s/g, '-')}`;
                     listItem.innerHTML = `
@@ -1644,35 +2175,33 @@
                     `;
                     navListsElem.appendChild(listItem);
 
-                    // Populate the list selector in the add-task section, excluding 'All', 'Important', 'Completed', 'Overdue', 'Planned'
-                    // The selector is for assigning tasks to *actual* lists.
-                    if (!isPredefinedList(list.name) || list.name === 'My Day') { // 'My Day' is a default list, so it's assignable
+                    if (!isPredefinedList(list.name) && !addedCategories.has(list.name)) {
                         let option = document.createElement('option');
                         option.value = list.name;
                         option.textContent = list.name;
-                        newTodoListSelect.appendChild(option);
+                        newTodoListSelect.appendChild(option.cloneNode(true));
+                        detailEditorCategorySelect.appendChild(option.cloneNode(true));
+                        addedCategories.add(list.name);
                     }
                 });
-                // Set the default list for new tasks. If currentListFilter is a custom list or 'My Day', use that.
-                // Otherwise, default to 'My Day'.
-                if (!isPredefinedList(currentListFilter) || currentListFilter === 'My Day') {
-                    if (newTodoListSelect.querySelector(`option[value="${currentListFilter}"]`)) {
-                        newTodoListSelect.value = currentListFilter;
-                    } else {
-                        newTodoListSelect.value = 'My Day';
-                    }
+                
+                if ((!isPredefinedList(currentListFilter) || currentListFilter === 'My Day') &&
+                    newTodoListSelect.querySelector(`option[value="${currentListFilter}"]`)) {
+                    newTodoListSelect.value = currentListFilter;
+                    detailEditorCategorySelect.value = currentListFilter; // Set for detail editor
                 } else {
                     newTodoListSelect.value = 'My Day';
+                    detailEditorCategorySelect.value = 'My Day'; // Set for detail editor
                 }
 
             } catch (error) {
                 console.error('Error rendering nav lists:', error);
-                showToast('Failed to load lists: ' + error.message, 'error');
+                showToast('Failed to load categories: ' + error.message, 'error');
             }
         }
 
 
-        async function loadTodos(isSearch = false) {
+        function loadTodos(isSearch = false) {
             if (!getToken()) { authOverlay.style.display = 'flex'; return; }
             try {
                 let url;
@@ -1681,84 +2210,113 @@
                 } else if (currentListFilter === 'All') {
                     url = API_TODOS_URL;
                 } else {
-                    // For 'My Day', 'Important', 'Planned', 'Completed', 'Overdue', and custom lists
                     url = `${API_TODOS_URL}?list=${encodeURIComponent(currentListFilter)}`;
                 }
 
-                const response = await fetch(url, { headers: getAuthHeaders() });
-                if (response.status === 401) return logout();
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.error}`);
-                }
-                const todos = await response.json();
+                fetch(url, { headers: getAuthHeaders() })
+                    .then(response => {
+                        if (response.status === 401) return logout();
+                        if (!response.ok) {
+                            return response.json()
+                                .catch(() => ({ error: 'The server encountered an error parsing the request.' }))
+                                .then(errorData => {
+                                    throw new Error(errorData.error || `Server returned ${response.status}`);
+                                });
+                        }
+                        return response.json();
+                    })
+                    .then(todos => {
+                        cardListContainer.innerHTML = '';
+                        searchResultsMessage.style.display = 'none';
+                        emptyMessage.style.display = 'none';
 
-                todoListElem.innerHTML = '';
-                searchResultsMessage.style.display = 'none';
-                emptyMessage.style.display = 'none';
+                        if (isSearch) {
+                            searchResultsMessage.textContent = `Search results for "${currentSearchQuery}"`;
+                            searchResultsMessage.style.display = 'block';
+                        }
 
-                if (isSearch) {
-                    searchResultsMessage.textContent = `Search results for "${currentSearchQuery}"`;
-                    searchResultsMessage.style.display = 'block';
-                }
+                        if (todos.length === 0) {
+                            emptyMessage.textContent = isSearch ? 'No notes or tasks found matching your search.' : 'No notes or tasks yet! Add one above.';
+                            emptyMessage.style.display = 'block';
+                        } else {
+                            todos.forEach(todo => renderCard(todo));
+                        }
 
-                if (todos.length === 0) {
-                    emptyMessage.textContent = isSearch ? 'No tasks found matching your search.' : 'No tasks yet! Add one above.';
-                    emptyMessage.style.display = 'block';
-                } else {
-                    todos.forEach(todo => renderTodo(todo));
-                }
-
-                // Only update nav lists if not a search operation
-                if (!isSearch) {
-                    await renderNavLists(); // Re-render nav lists to update counts
-                    updateListOptionsMenuState(); // Update menu visibility/state
-                }
+                        if (!isSearch) {
+                            renderNavLists();
+                            updateListOptionsMenuState();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error loading todos:', error);
+                        showToast('Failed to load notes/tasks: ' + error.message, 'error');
+                    });
             } catch (error) {
-                console.error('Error loading todos:', error);
-                showToast('Failed to load tasks: ' + error.message, 'error');
+                console.error('Error in loadTodos:', error);
+                showToast('An unexpected error occurred: ' + error.message, 'error');
             }
         }
 
-        function renderTodo(todo) {
+        function renderCard(card) { // Renamed from renderTodo to renderCard
             const listItem = document.createElement('li');
-            listItem.classList.add('todo-item', 'fade-in'); // Added fade-in animation
-            if (todo.completed) listItem.classList.add('completed');
+            listItem.classList.add('note-card', 'fade-in');
             
-            listItem.dataset.id = todo._id;
-            listItem.dataset.dueDate = todo.dueDate || '';
-
-            if (todo.color && todo.color !== 'transparent') {
-                listItem.style.borderLeft = `6px solid ${todo.color}`;
+            if (isSelectionMode) {
+                listItem.classList.add('selection-mode');
+                if (selectedIds.has(card._id)) {
+                    listItem.classList.add('selected');
+                }
             }
 
-            const dueDateObj = todo.dueDate ? new Date(todo.dueDate) : null;
-            const isOverdue = dueDateObj && !todo.completed && dueDateObj < new Date(new Date().setHours(0,0,0,0)); // Check if past today's start
+            if (card.color && card.color !== 'transparent') {
+                listItem.style.borderLeft = `6px solid ${card.color}`;
+            }
+            if (card.type === 'todo' && card.checklistItems && card.checklistItems.length > 0 && card.checklistItems.every(item => item.completed)) {
+                listItem.classList.add('completed');
+            }
+            
+            listItem.dataset.id = card._id;
+            listItem.dataset.type = card.type;
+
+            const dueDateObj = card.dueDate ? new Date(card.dueDate) : null;
+            const isOverdue = dueDateObj && card.type === 'todo' && !card.completed && dueDateObj < new Date(new Date().setHours(0,0,0,0));
+
+            let contentHTML = '';
+            if (card.type === 'note') {
+                contentHTML = card.subText ? `<span class="card-content">${card.subText}</span>` : '';
+            } else { // type === 'todo'
+                if (card.checklistItems && card.checklistItems.length > 0) {
+                    contentHTML += `<div class="checklist-items-preview">`;
+                    card.checklistItems.slice(0, 3).forEach((item, index) => { // Show max 3 items
+                        contentHTML += `
+                            <div class="checklist-item ${item.completed ? 'completed' : ''}" data-item-id="${item._id}">
+                                <input type="checkbox" class="card-checklist-checkbox" ${item.completed ? 'checked' : ''} data-todo-id="${card._id}" data-item-id="${item._id}">
+                                <span class="item-text">${item.text}</span>
+                            </div>
+                        `;
+                    });
+                    if (card.checklistItems.length > 3) {
+                        contentHTML += `<div class="checklist-item">...</div>`;
+                    }
+                    contentHTML += `</div>`;
+                }
+            }
 
             listItem.innerHTML = `
-                <label class="checkbox-container">
-                    <input type="checkbox" ${todo.completed ? 'checked' : ''} data-action="toggle-complete">
-                </label>
-                <button class="important-btn ${todo.isImportant ? 'active' : ''}" data-action="toggle-important" title="${todo.isImportant ? 'Unpin Task' : 'Pin Task'}">
-                    <i class="${todo.isImportant ? 'fas fa-star' : 'far fa-star'}"></i>
+                ${isSelectionMode ? '<div class="card-selector"></div>' : ''}
+                <button class="important-btn ${card.isImportant ? 'active' : ''}" data-action="toggle-important" title="${card.isImportant ? 'Unpin' : 'Pin'}" ${isSelectionMode ? 'style="display:none"' : ''}>
+                    <i class="${card.isImportant ? 'fas fa-star' : 'far fa-star'}"></i>
                 </button>
-                <div class="todo-info">
-                    <span class="todo-text">${todo.text}</span>
-                    ${todo.subText ? `<span class="todo-subtext">${todo.subText}</span>` : ''}
-                    ${todo.dueDate ? `<span class="todo-date ${isOverdue ? 'overdue' : ''}"><i class="far fa-calendar-alt"></i> ${formatDueDate(todo.dueDate)}</span>` : ''}
-                </div>
-                <div class="actions">
-                    <button class="edit-btn" data-action="edit" title="Edit"><i class="fas fa-pencil-alt"></i></button>
-                    <button class="delete-btn" data-action="delete" title="Delete"><i class="fas fa-trash"></i></button>
-                </div>
+                <span class="card-title">${card.text}</span>
+                ${contentHTML}
+                ${card.type === 'todo' && card.dueDate ? `<span class="card-date ${isOverdue ? 'overdue' : ''}"><i class="far fa-calendar-alt"></i> ${formatDueDate(card.dueDate)}</span>` : ''}
             `;
-            todoListElem.appendChild(listItem);
+            cardListContainer.appendChild(listItem);
         }
 
-        // --- List Options Menu Logic ---
         function toggleListOptionsMenu() {
             listOptionsMenu.style.display = listOptionsMenu.style.display === 'block' ? 'none' : 'block';
-            updateListOptionsMenuState(); // Update state when toggling
+            updateListOptionsMenuState();
         }
 
         function updateListOptionsMenuState() {
@@ -1772,21 +2330,102 @@
             }
         }
 
+        // --- NEW Add item checklist functions ---
+        function addNewChecklistItemInput(container, value = '', isCompleted = false, itemId = null) {
+            const row = document.createElement('div');
+            row.classList.add('add-checklist-item-row');
+            row.dataset.itemId = itemId || Date.now().toString(); // Temporary ID for new items
+            row.innerHTML = `
+                <input type="text" placeholder="Checklist item" value="${value}">
+                <button type="button" class="remove-item-btn"><i class="fas fa-times"></i></button>
+            `;
+            container.appendChild(row);
+
+            row.querySelector('.remove-item-btn').addEventListener('click', () => {
+                row.remove();
+            });
+            return row.querySelector('input[type="text"]');
+        }
+
+        addNewChecklistItemBtn.addEventListener('click', () => {
+            addNewChecklistItemInput(newTodoChecklistItemsContainer).focus();
+        });
+
+        // --- NEW Detail Editor Checklist functions ---
+        function renderDetailChecklistItem(item) {
+            const itemDiv = document.createElement('div');
+            itemDiv.classList.add('detail-checklist-item');
+            if (item._id) {
+                itemDiv.dataset.itemId = item._id;
+            }
+            itemDiv.innerHTML = `
+                <input type="checkbox" ${item.completed ? 'checked' : ''} data-action="toggle-item-complete">
+                <input type="text" value="${item.text}" class="${item.completed ? 'completed' : ''}" placeholder="Checklist item">
+                <button type="button" class="remove-item-btn"><i class="fas fa-times"></i></button>
+            `;
+            detailEditorChecklistContainer.appendChild(itemDiv);
+
+            const checkbox = itemDiv.querySelector('input[type="checkbox"]');
+            const textInput = itemDiv.querySelector('input[type="text"]');
+            const removeBtn = itemDiv.querySelector('.remove-item-btn');
+
+            checkbox.addEventListener('change', () => {
+                textInput.classList.toggle('completed', checkbox.checked);
+            });
+            removeBtn.addEventListener('click', () => {
+                itemDiv.remove();
+            });
+        }
+        
+        addDetailChecklistItemBtn.addEventListener('click', () => {
+            renderDetailChecklistItem({ text: '', completed: false });
+            detailEditorChecklistContainer.lastChild.querySelector('input[type="text"]').focus();
+        });
+
+
         // --- Event Listeners ---
+
+        // NEW: Handle type selection for new notes/tasks
+        newTodoTypeRadios.forEach(radio => {
+            radio.addEventListener('change', (event) => {
+                selectedNewTodoType = event.target.value;
+                if (selectedNewTodoType === 'note') {
+                    newTodoDuedateGroup.style.display = 'none';
+                    newTodoChecklistGroup.style.display = 'none';
+                    newTodoSubtextGroup.style.display = 'flex';
+                    newTodoChecklistItemsContainer.innerHTML = ''; // Clear checklist inputs
+                    newTodoSubtext.placeholder = 'Note content...';
+                } else { // 'todo'
+                    newTodoDuedateGroup.style.display = 'flex';
+                    newTodoChecklistGroup.style.display = 'flex';
+                    newTodoSubtextGroup.style.display = 'none';
+                    if (newTodoChecklistItemsContainer.children.length === 0) {
+                        addNewChecklistItemInput(newTodoChecklistItemsContainer); // Add initial item if empty
+                    }
+                }
+            });
+        });
 
         // Expand/Collapse add task input
         newTodoInput.addEventListener('focus', () => {
             addTaskSection.classList.add('expanded');
+            if (selectedNewTodoType === 'todo' && newTodoChecklistItemsContainer.children.length === 0) {
+                 addNewChecklistItemInput(newTodoChecklistItemsContainer); // Add initial item if empty for todo
+            }
         });
 
-        // Only collapse if main input is empty AND no other fields have values
         addTaskSection.addEventListener('focusout', (event) => {
-            // Check if the focus goes outside the entire addTaskSection
             if (!addTaskSection.contains(event.relatedTarget)) {
+                // Collect all checklist item texts
+                const checklistItemsText = Array.from(newTodoChecklistItemsContainer.querySelectorAll('input[type="text"]'))
+                                                .map(input => input.value.trim())
+                                                .filter(text => text !== '');
+
                 if (newTodoInput.value.trim() === '' &&
                     newTodoSubtext.value.trim() === '' &&
                     newTodoDuedate.value === '' &&
-                    selectedNewTodoColor === 'transparent') { // Check color as well
+                    selectedNewTodoColor === 'transparent' &&
+                    checklistItemsText.length === 0) {
                     addTaskSection.classList.remove('expanded');
                 }
             }
@@ -1796,26 +2435,24 @@
         newTodoColorPicker.addEventListener('click', (event) => {
             const swatch = event.target.closest('.color-swatch');
             if (swatch) {
-                document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+                document.querySelectorAll('#new-todo-color-picker .color-swatch').forEach(s => s.classList.remove('active'));
                 swatch.classList.add('active');
                 selectedNewTodoColor = swatch.dataset.color;
             }
         });
 
-        // Debounced search input handler
         const debouncedSearch = debounce(async (query) => {
             currentSearchQuery = query;
             if (query.length > 0) {
-                currentListTitle.textContent = `Search Results for "${query}"`; // Update title for search
+                currentListTitle.textContent = `Search Results for "${query}"`;
                 await loadTodos(true);
             } else {
                 currentSearchQuery = null;
-                // If search input is cleared, go back to current list filter
                 const activeNavItem = document.querySelector(`.nav-item.active .list-name`);
                 currentListTitle.textContent = activeNavItem ? activeNavItem.textContent : currentListFilter;
                 await loadTodos(false);
             }
-        }, 300); // 300ms debounce
+        }, 300);
 
         globalSearchInput.addEventListener('input', (event) => {
             debouncedSearch(event.target.value.trim());
@@ -1824,12 +2461,11 @@
         searchToggleBtn.addEventListener('click', () => {
             searchInputContainer.classList.add('active');
             globalSearchInput.focus();
-            currentSearchQuery = null; // Clear previous search when opening
+            currentSearchQuery = null;
             globalSearchInput.value = '';
             searchResultsMessage.style.display = 'none';
-            emptyMessage.style.display = 'none'; // Hide generic empty message
-            todoListElem.innerHTML = ''; // Clear tasks while searching
-            // Hide list options menu if open
+            emptyMessage.style.display = 'none';
+            cardListContainer.innerHTML = '';
             listOptionsMenu.style.display = 'none';
         });
 
@@ -1837,282 +2473,308 @@
             searchInputContainer.classList.remove('active');
             globalSearchInput.value = '';
             currentSearchQuery = null;
-            loadTodos(); // Reload tasks for the currently selected list
+            loadTodos();
+        });
+
+        bulkSelectToggleBtn.addEventListener('click', () => {
+            toggleSelectionMode();
+        });
+
+        function toggleSelectionMode() {
+            isSelectionMode = !isSelectionMode;
+            bulkSelectToggleBtn.classList.toggle('active', isSelectionMode);
+            
+            if (!isSelectionMode) {
+                selectedIds.clear();
+                bulkActionBar.classList.remove('active');
+            }
+            
+            // Re-render to show/hide selectors
+            loadTodos(!!currentSearchQuery);
+        }
+
+        bulkCancelBtn.addEventListener('click', () => {
+            toggleSelectionMode();
+        });
+
+        bulkDeleteBtn.addEventListener('click', async () => {
+            const count = selectedIds.size;
+            if (count === 0) return;
+            
+            if (!confirm(`Are you sure you want to delete ${count} selected item(s)?`)) return;
+
+            try {
+                const deletePromises = Array.from(selectedIds).map(id => 
+                    fetch(`${API_TODOS_URL}/${id}`, {
+                        method: 'DELETE',
+                        headers: getAuthHeaders()
+                    })
+                );
+
+                await Promise.all(deletePromises);
+                showToast(`Successfully deleted ${count} items.`, 'success');
+                toggleSelectionMode();
+            } catch (error) {
+                console.error('Bulk delete error:', error);
+                showToast('Failed to delete some items.', 'error');
+                loadTodos(!!currentSearchQuery);
+            }
+        });
+
+        bulkPinBtn.addEventListener('click', async () => {
+            const count = selectedIds.size;
+            if (count === 0) return;
+
+            try {
+                const updatePromises = Array.from(selectedIds).map(id => 
+                    fetch(`${API_TODOS_URL}/${id}`, {
+                        method: 'PUT',
+                        headers: getAuthHeaders(),
+                        body: JSON.stringify({ isImportant: true })
+                    })
+                );
+
+                await Promise.all(updatePromises);
+                showToast(`Pinned ${count} items.`, 'success');
+                toggleSelectionMode();
+            } catch (error) {
+                console.error('Bulk pin error:', error);
+                showToast('Failed to update some items.', 'error');
+                loadTodos(!!currentSearchQuery);
+            }
+        });
+
+        bulkMoveBtn.addEventListener('click', async () => {
+            const count = selectedIds.size;
+            if (count === 0) return;
+
+            const newCategory = prompt("Enter the category name to move items to:", "My Day");
+            if (!newCategory) return;
+
+            try {
+                const updatePromises = Array.from(selectedIds).map(id => 
+                    fetch(`${API_TODOS_URL}/${id}`, {
+                        method: 'PUT',
+                        headers: getAuthHeaders(),
+                        body: JSON.stringify({ list: newCategory })
+                    })
+                );
+
+                await Promise.all(updatePromises);
+                showToast(`Moved ${count} items to ${newCategory}.`, 'success');
+                toggleSelectionMode();
+            } catch (error) {
+                console.error('Bulk move error:', error);
+                showToast('Failed to move some items.', 'error');
+                loadTodos(!!currentSearchQuery);
+            }
         });
 
 
         newTodoInput.addEventListener('keypress', async (event) => {
-            if (event.key === 'Enter') {
-                event.preventDefault(); // Prevent default form submission behavior
+            if (event.key === 'Enter' && !event.shiftKey) { // Allow shift+Enter for multiline
+                event.preventDefault();
 
                 const text = newTodoInput.value.trim();
                 const subText = newTodoSubtext.value.trim();
-                const dueDate = newTodoDuedate.value; // Will be ISO string or empty
+                const dueDate = selectedNewTodoType === 'todo' ? newTodoDuedate.value : null;
                 const color = selectedNewTodoColor;
                 const assignedList = newTodoListSelect.value;
+                const type = selectedNewTodoType;
+
+                const checklistItems = Array.from(newTodoChecklistItemsContainer.querySelectorAll('.add-checklist-item-row input[type="text"]'))
+                                          .map(input => ({ text: input.value.trim(), completed: false }))
+                                          .filter(item => item.text !== '');
 
                 if (text === '') {
-                    showToast('Task cannot be empty!', 'error');
+                    showToast('Note/Task title cannot be empty!', 'error');
                     return;
                 }
 
                 let finalAssignedList = assignedList;
-                let isImportantForNewTodo = false;
-                let newTodoCompletedStatus = false;
-
-                // Adjust properties based on current list context for convenience
+                let isImportantForNew = false;
+                
                 if (currentListFilter === 'Important') {
-                    isImportantForNewTodo = true;
-                    // If adding from 'Important' view, still assign to a physical list (My Day by default)
-                    // and mark as important.
-                    finalAssignedList = assignedList; 
-                } else if (currentListFilter === 'Planned') {
-                    // If creating from Planned list, ensure it has a due date
+                    isImportantForNew = true;
+                } else if (currentListFilter === 'Planned' && type === 'todo') {
                     if (!dueDate) {
-                        showToast('Tasks in "Planned" list require a due date.', 'error');
+                        showToast('To-Do lists in "Planned" category require a due date.', 'error');
                         return;
                     }
-                    finalAssignedList = assignedList;
-                } else if (currentListFilter === 'Completed') { // NEW
-                    newTodoCompletedStatus = true;
-                    finalAssignedList = assignedList;
                 } else if (isPredefinedList(currentListFilter) && currentListFilter !== 'My Day') {
-                    // If user is in any other system view (like Overdue, All) except My Day
-                    // and tries to add a task, it should go to 'My Day' by default.
                     finalAssignedList = 'My Day';
                 } else if (!isPredefinedList(currentListFilter)) {
-                    // If user is in a custom list, assign task to that list
                     finalAssignedList = currentListFilter;
                 } else {
-                    // Default case, for 'My Day' or 'All'
                     finalAssignedList = 'My Day';
                 }
 
                 try {
+                    const payload = {
+                        text,
+                        subText,
+                        dueDate: dueDate ? new Date(dueDate).toISOString() : null,
+                        color,
+                        list: finalAssignedList,
+                        isImportant: isImportantForNew,
+                        type: type,
+                        checklistItems: type === 'todo' ? checklistItems : []
+                    };
+
                     const response = await fetch(API_TODOS_URL, {
                         method: 'POST',
                         headers: getAuthHeaders(),
-                        body: JSON.stringify({
-                            text,
-                            subText,
-                            dueDate: dueDate ? new Date(dueDate).toISOString() : null,
-                            color,
-                            list: finalAssignedList,
-                            isImportant: isImportantForNewTodo,
-                            completed: newTodoCompletedStatus // NEW
-                        }),
+                        body: JSON.stringify(payload),
                     });
                     if (!response.ok) {
                         const errorData = await response.json();
                         throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.details || errorData.error}`);
                     }
-                    showToast('Task added successfully!', 'success');
+                    showToast(`${type === 'note' ? 'Note' : 'To-Do List'} added successfully!`, 'success');
+                    
+                    // Reset inputs
                     newTodoInput.value = '';
                     newTodoSubtext.value = '';
                     newTodoDuedate.value = '';
-                    selectedNewTodoColor = 'transparent'; // Reset color
-                    newTodoListSelect.value = 'My Day'; // Reset list selection
-                    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
-                    document.querySelector('.color-swatch[data-color="transparent"]').classList.add('active');
+                    newTodoChecklistItemsContainer.innerHTML = '';
+                    selectedNewTodoColor = 'transparent';
+                    document.querySelector('#new-todo-color-picker .color-swatch[data-color="transparent"]').classList.add('active');
+                    newTodoListSelect.value = 'My Day';
+                    document.querySelector('input[name="new-item-type"][value="todo"]').checked = true;
+                    selectedNewTodoType = 'todo';
+                    newTodoDuedateGroup.style.display = 'flex';
+                    newTodoChecklistGroup.style.display = 'flex';
+                    addNewChecklistItemInput(newTodoChecklistItemsContainer); // Add a fresh initial item for next todo
+                    newTodoSubtext.placeholder = 'Add list description...';
 
-                    // If all fields are empty, collapse the input
+
                     if (newTodoInput.value.trim() === '' &&
                         newTodoSubtext.value.trim() === '' &&
                         newTodoDuedate.value === '' &&
-                        selectedNewTodoColor === 'transparent') {
+                        selectedNewTodoColor === 'transparent' &&
+                        checklistItems.length === 0) { // Check real checklist items, not just the single input
                         addTaskSection.classList.remove('expanded');
                     }
 
-                    await loadTodos(); // Reload all to update list counts and display
-                    todoListElem.scrollTop = todoListElem.scrollHeight;
+                    await loadTodos();
+                    cardListContainer.scrollTop = cardListContainer.scrollHeight;
                 } catch (error) {
-                    console.error('Error adding todo:', error);
-                    showToast('Failed to add task: ' + error.message, 'error');
+                    console.error('Error adding card:', error);
+                    showToast('Failed to add note/task: ' + error.message, 'error');
                 }
             }
         });
 
-        todoListElem.addEventListener('click', async (event) => {
+        // Click handler for opening detail editor or selecting cards
+        cardListContainer.addEventListener('click', async (event) => {
             const target = event.target;
-            const listItem = target.closest('.todo-item');
+            const listItem = target.closest('.note-card');
             if (!listItem) return;
 
-            const id = listItem.dataset.id; // Use _id from dataset
-            const action = target.dataset.action || target.closest('button')?.dataset.action;
+            const id = listItem.dataset.id;
+            if (!id) return;
 
-            if (!action || !id) return;
+            if (isSelectionMode) {
+                toggleItemSelection(id, listItem);
+                return;
+            }
+
+            if (target.closest('.important-btn')) return; // handled by other listener
+
+            await openDetailEditor(id);
+        });
+
+        function toggleItemSelection(id, element) {
+            if (selectedIds.has(id)) {
+                selectedIds.delete(id);
+                element.classList.remove('selected');
+            } else {
+                selectedIds.add(id);
+                element.classList.add('selected');
+            }
+            updateBulkSelectionUI();
+        }
+
+        function updateBulkSelectionUI() {
+            selectedCountElem.textContent = selectedIds.size;
+            if (selectedIds.size > 0) {
+                bulkActionBar.classList.add('active');
+            } else {
+                bulkActionBar.classList.remove('active');
+            }
+        }
+        
+        // Listener for checklist checkboxes on cards
+        cardListContainer.addEventListener('change', async (event) => {
+            const target = event.target;
+            if (!target.classList.contains('card-checklist-checkbox')) return;
+
+            const todoId = target.dataset.todoId;
+            const itemId = target.dataset.itemId;
+            const isCompleted = target.checked;
 
             try {
-                if (action === 'toggle-complete') {
-                    const currentTodoResponse = await fetch(`${API_TODOS_URL}/${id}`, { headers: getAuthHeaders() });
-                    if (!currentTodoResponse.ok) {
-                        const errorData = await currentTodoResponse.json();
-                        throw new Error(`HTTP error! status: ${currentTodoResponse.status}, message: ${errorData.error}`);
-                    }
-                    const currentTodo = await currentTodoResponse.json();
-                    const newCompletedStatus = !currentTodo.completed;
+                const response = await fetch(`${API_TODOS_URL}/${todoId}`, { headers: getAuthHeaders() });
+                const todo = await response.json();
+                
+                const updatedItems = todo.checklistItems.map(item => 
+                    item._id === itemId ? { ...item, completed: isCompleted } : item
+                );
 
-                    const updateResponse = await fetch(`${API_TODOS_URL}/${id}`, {
-                        method: 'PUT',
-                        headers: getAuthHeaders(),
-                        body: JSON.stringify({ completed: newCompletedStatus }),
-                    });
-                    if (!updateResponse.ok) {
-                        const errorData = await updateResponse.json();
-                        throw new Error(`HTTP error! status: ${updateResponse.status}, message: ${errorData.error}`);
-                    }
-                    showToast('Task status updated!', 'info');
-                    await loadTodos(currentSearchQuery ? true : false);
-                } else if (action === 'toggle-important') {
-                    const currentTodoResponse = await fetch(`${API_TODOS_URL}/${id}`, { headers: getAuthHeaders() });
-                    if (!currentTodoResponse.ok) {
-                        const errorData = await currentTodoResponse.json();
-                        throw new Error(`HTTP error! status: ${currentTodoResponse.status}, message: ${errorData.error}`);
-                    }
-                    const currentTodo = await currentTodoResponse.json();
-                    const newImportantStatus = !currentTodo.isImportant;
+                const updateResponse = await fetch(`${API_TODOS_URL}/${todoId}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ checklistItems: updatedItems }),
+                });
 
-                    const updateResponse = await fetch(`${API_TODOS_URL}/${id}`, {
-                        method: 'PUT',
-                        headers: getAuthHeaders(),
-                        body: JSON.stringify({ isImportant: newImportantStatus }),
-                    });
-                    if (!updateResponse.ok) {
-                        const errorData = await updateResponse.json();
-                        throw new Error(`HTTP error! status: ${updateResponse.status}, message: ${errorData.error}`);
-                    }
-                    showToast(`Task marked as ${newImportantStatus ? 'important' : 'unimportant'}!`, 'info');
-                    await loadTodos(currentSearchQuery ? true : false);
-                } else if (action === 'edit') {
-                    const todoInfoDiv = listItem.querySelector('.todo-info');
-                    const todoTextSpan = listItem.querySelector('.todo-text');
-                    const todoSubtextSpan = listItem.querySelector('.todo-subtext');
-                    const todoDateSpan = listItem.querySelector('.todo-date');
+                if (!updateResponse.ok) throw new Error('Failed to update task');
+                
+                renderNavLists();
+                const card = target.closest('.note-card');
+                const itemRow = target.closest('.checklist-item');
+                if (itemRow) itemRow.classList.toggle('completed', isCompleted);
+                
+                const allDone = updatedItems.length > 0 && updatedItems.every(i => i.completed);
+                if (card) card.classList.toggle('completed', allDone);
 
-                    const originalText = todoTextSpan ? todoTextSpan.textContent : '';
-                    const originalSubtext = todoSubtextSpan ? todoSubtextSpan.textContent : '';
-
-                    // Fetch the full todo to get actual dueDate in ISO format for datetime-local input
-                    const currentTodoResponse = await fetch(`${API_TODOS_URL}/${id}`, { headers: getAuthHeaders() });
-                    if (!currentTodoResponse.ok) {
-                        const errorData = await currentTodoResponse.json();
-                        throw new Error(`HTTP error! status: ${currentTodoResponse.status}, message: ${errorData.error}`);
-                    }
-                    const fullTodo = await currentTodoResponse.json();
-                    const originalFullDueDate = fullTodo.dueDate ? new Date(fullTodo.dueDate).toISOString().slice(0, 16) : ''; // Format for datetime-local
-
-                    const textInput = document.createElement('input');
-                    textInput.type = 'text';
-                    textInput.value = originalText;
-                    textInput.classList.add('edit-input');
-
-                    const subtextInput = document.createElement('textarea');
-                    subtextInput.value = originalSubtext;
-                    subtextInput.classList.add('edit-textarea');
-                    subtextInput.placeholder = 'Add sub-text (optional)';
-
-                    const dueDateInput = document.createElement('input');
-                    dueDateInput.type = 'datetime-local';
-                    dueDateInput.value = originalFullDueDate;
-                    dueDateInput.classList.add('edit-datetime');
-
-                    todoInfoDiv.innerHTML = '';
-                    todoInfoDiv.appendChild(textInput);
-                    todoInfoDiv.appendChild(subtextInput);
-                    todoInfoDiv.appendChild(dueDateInput);
-
-                    textInput.focus();
-                    textInput.select();
-
-                    let isSaving = false;
-                    const saveEdit = async (event) => {
-                        if (isSaving) return;
-
-                        // Check if the focus goes to another input within the same todo item
-                        if (event && (event.relatedTarget === textInput || event.relatedTarget === subtextInput || event.relatedTarget === dueDateInput)) {
-                            return;
-                        }
-
-                        isSaving = true;
-                        const newText = textInput.value.trim();
-                        const newSubtext = subtextInput.value.trim();
-                        const newDueDate = dueDateInput.value; // ISO string or empty
-                        let changes = {};
-
-                        if (newText === '') {
-                            showToast('Task text cannot be empty. Reverting to original.', 'error');
-                            await loadTodos(currentSearchQuery ? true : false); // Reload to discard changes
-                            return;
-                        }
-
-                        if (newText !== originalText) changes.text = newText;
-                        if (newSubtext !== originalSubtext) changes.subText = newSubtext;
-                        // Compare due dates - convert both to proper format or null for comparison
-                        const currentDueDateFormatted = fullTodo.dueDate ? new Date(fullTodo.dueDate).toISOString().slice(0, 16) : '';
-                        if (newDueDate !== currentDueDateFormatted) {
-                            changes.dueDate = newDueDate ? new Date(newDueDate).toISOString() : null;
-                        }
-
-                        try {
-                            if (Object.keys(changes).length > 0) {
-                                const updateResponse = await fetch(`${API_TODOS_URL}/${id}`, {
-                                    method: 'PUT',
-                                    headers: getAuthHeaders(),
-                                    body: JSON.stringify(changes),
-                                });
-                                if (!updateResponse.ok) {
-                                    const errorData = await updateResponse.json();
-                                    throw new Error(`HTTP error! status: ${updateResponse.status}, message: ${errorData.error}`);
-                                }
-                                showToast('Task updated successfully!', 'success');
-                            }
-                            await loadTodos(currentSearchQuery ? true : false);
-                        } catch (error) {
-                            console.error('Error saving edit:', error);
-                            showToast('Failed to save changes: ' + error.message, 'error');
-                            await loadTodos(currentSearchQuery ? true : false); // Reload to revert to server state
-                        } finally {
-                            isSaving = false;
-                        }
-                    };
-
-                    // Blur events for saving
-                    textInput.addEventListener('blur', saveEdit);
-                    subtextInput.addEventListener('blur', saveEdit);
-                    dueDateInput.addEventListener('blur', saveEdit);
-
-                    // Keyboard events for navigation/cancel
-                    textInput.addEventListener('keydown', (e) => {
-                        if (e.key === 'Enter') { e.preventDefault(); subtextInput.focus(); }
-                        else if (e.key === 'Escape') { loadTodos(currentSearchQuery ? true : false); }
-                    });
-                    subtextInput.addEventListener('keydown', (e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); dueDateInput.focus(); }
-                        else if (e.key === 'Escape') { loadTodos(currentSearchQuery ? true : false); }
-                    });
-                    dueDateInput.addEventListener('keydown', (e) => {
-                        if (e.key === 'Enter') { e.preventDefault(); dueDateInput.blur(); } // Triggers saveEdit
-                        else if (e.key === 'Escape') { loadTodos(currentSearchQuery ? true : false); }
-                    });
-
-                } else if (action === 'delete') { // Hard delete action
-                    const todoTitle = listItem.querySelector('.todo-text').textContent;
-                    if (!confirm(`Are you absolutely sure you want to delete "${todoTitle}"? This cannot be undone.`)) return;
-                    
-                    const response = await fetch(`${API_TODOS_URL}/${id}`, {
-                        method: 'DELETE', // Now performs hard delete
-                        headers: getAuthHeaders()
-                    });
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.error}`);
-                    }
-                    showToast('Task deleted permanently.', 'info');
-                    await loadTodos(currentSearchQuery ? true : false);
-                }
             } catch (error) {
-                console.error('Error performing action:', error);
-                showToast('Failed to update task: ' + error.message, 'error');
+                console.error('Error updating checklist:', error);
+                showToast('Failed to update checklist item', 'error');
+                target.checked = !isCompleted; 
+            }
+        });
+
+        // Listener for pin button on cards
+        cardListContainer.addEventListener('click', async (event) => {
+            const target = event.target;
+            const listItem = target.closest('.note-card');
+            const pinButton = target.closest('.important-btn');
+            if (!listItem || !pinButton) return;
+
+            const id = listItem.dataset.id;
+            try {
+                const currentCardResponse = await fetch(`${API_TODOS_URL}/${id}`, { headers: getAuthHeaders() });
+                if (!currentCardResponse.ok) {
+                    const errorData = await currentCardResponse.json();
+                    throw new Error(`HTTP error! status: ${currentCardResponse.status}, message: ${errorData.error}`);
+                }
+                const currentCard = await currentCardResponse.json();
+                const newImportantStatus = !currentCard.isImportant;
+
+                const updateResponse = await fetch(`${API_TODOS_URL}/${id}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ isImportant: newImportantStatus }),
+                });
+                if (!updateResponse.ok) {
+                    const errorData = await updateResponse.json();
+                    throw new Error(`HTTP error! status: ${updateResponse.status}, message: ${errorData.error}`);
+                }
+                showToast(`${currentCard.type === 'note' ? 'Note' : 'To-Do List'} marked as ${newImportantStatus ? 'important' : 'unimportant'}!`, 'info');
+                await loadTodos(currentSearchQuery ? true : false);
+            } catch (error) {
+                console.error('Error toggling important:', error);
+                showToast('Failed to update importance: ' + error.message, 'error');
             }
         });
 
@@ -2125,22 +2787,20 @@
                 currentListFilter = navItem.dataset.listFilter;
                 currentListTitle.textContent = navItem.querySelector('.list-name').textContent;
                 
-                // Close search if open
                 searchInputContainer.classList.remove('active');
                 globalSearchInput.value = '';
                 currentSearchQuery = null;
 
-                // Close sidebar on mobile
                 sidebar.classList.remove('open');
                 sidebarOverlay.classList.remove('active');
 
-                loadTodos(); // This will also call updateListOptionsMenuState
+                loadTodos();
             }
         });
 
-        // Add New List (Modal)
+        // Add New Category (Modal)
         addNewListBtn.addEventListener('click', () => {
-            newListNameInput.value = ''; // Clear input
+            newListNameInput.value = '';
             addListModalError.style.display = 'none';
             showModal('add-list-modal');
         });
@@ -2148,76 +2808,51 @@
         addListConfirmBtn.addEventListener('click', async () => {
             const newListName = newListNameInput.value.trim();
             if (newListName === '') {
-                addListModalError.textContent = 'List name cannot be empty.';
+                addListModalError.textContent = 'Category name cannot be empty.';
                 addListModalError.style.display = 'block';
                 return;
             }
-            // Client-side check against system view names
-            const systemViewNames = ['All', 'My Day', 'Important', 'Planned', 'Completed', 'Overdue'];
-            if (systemViewNames.map(n => n.toLowerCase()).includes(newListName.toLowerCase())) {
-                addListModalError.textContent = `"${newListName}" is a system view and cannot be used for a custom list.`;
+            if (SYSTEM_VIEW_LIST_NAMES.map(n => n.toLowerCase()).includes(newListName.toLowerCase())) {
+                addListModalError.textContent = `"${newListName}" is a system category and cannot be used for a custom category.`;
                 addListModalError.style.display = 'block';
                 return;
             }
 
-            const allExistingListNames = Array.from(document.querySelectorAll('.nav-lists .list-name'))
+            const allExistingCategoryNames = Array.from(document.querySelectorAll('.nav-lists .list-name'))
                 .map(el => el.textContent.toLowerCase());
 
-            if (allExistingListNames.includes(newListName.toLowerCase())) {
-                addListModalError.textContent = 'A list with this name already exists!';
+            if (allExistingCategoryNames.includes(newListName.toLowerCase())) {
+                addListModalError.textContent = 'A category with this name already exists!';
                 addListModalError.style.display = 'block';
                 return;
             }
-
-            // Backend doesn't have an explicit 'create list' endpoint
-            // A list is implicitly created when a task is assigned to it.
-            // For now, we simulate by setting currentListFilter and reloading.
-            // If the user adds a task to this new list, it will appear.
-            // To make it appear immediately, we could create a dummy task and immediately delete it,
-            // or modify the backend to allow empty list creation. Sticking to implicit for now.
 
             hideModal('add-list-modal');
             currentListFilter = newListName;
             currentListTitle.textContent = newListName;
-            await loadTodos(); // Reload to reflect the new active filter (and re-render nav for potential new list entry)
-            showToast(`List "${newListName}" created (will appear when first task is added).`, 'success');
+            await loadTodos();
+            showToast(`Category "${newListName}" created (will appear when first note/task is added).`, 'success');
         });
 
-
-        // --- THEME SWITCHING EVENT LISTENER ---
         themeToggleButton.addEventListener('click', () => {
             currentThemeIndex = (currentThemeIndex + 1) % themes.length;
             applyTheme(currentThemeIndex);
             showToast('Theme changed!', 'info');
         });
 
-        // Sidebar Toggle for Mobile
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            sidebarOverlay.classList.remove('active');
+        });
         menuToggleBtn.addEventListener('click', () => {
             sidebar.classList.toggle('open');
             sidebarOverlay.classList.toggle('active');
         });
 
-        sidebarOverlay.addEventListener('click', () => {
-            sidebar.classList.remove('open');
-            sidebarOverlay.classList.remove('active');
-        });
-
-        // --- LIST OPTIONS MENU EVENT LISTENERS (NEW) ---
         moreOptionsButton.addEventListener('click', (event) => {
-            event.stopPropagation(); // Prevent document click from closing it immediately
+            event.stopPropagation();
             toggleListOptionsMenu();
         });
-
-        function updateListOptionsMenuState() {
-            const isPredefined = isPredefinedList(currentListFilter);
-            if (isPredefined) {
-                editListOption.classList.add('disabled');
-                deleteListOption.classList.add('disabled');
-            } else {
-                editListOption.classList.remove('disabled');
-                deleteListOption.classList.remove('disabled');
-            }
-        }
 
         editListOption.addEventListener('click', () => {
             if (editListOption.classList.contains('disabled')) return;
@@ -2225,7 +2860,7 @@
             renameListNameInput.value = currentListFilter;
             renameListModalError.style.display = 'none';
             showModal('rename-list-modal');
-            toggleListOptionsMenu(); // Close menu
+            toggleListOptionsMenu();
         });
 
         renameListConfirmBtn.addEventListener('click', async () => {
@@ -2233,27 +2868,25 @@
             const newListName = renameListNameInput.value.trim();
 
             if (newListName === '') {
-                renameListModalError.textContent = 'New list name cannot be empty.';
+                renameListModalError.textContent = 'New category name cannot be empty.';
                 renameListModalError.style.display = 'block';
                 return;
             }
             if (newListName === oldListName) {
                 hideModal('rename-list-modal');
-                return; // No change needed
+                return;
             }
 
             const allExistingListNames = Array.from(document.querySelectorAll('.nav-lists .list-name'))
                 .map(el => el.textContent.toLowerCase());
             
-            // Client-side check against system view names
-            const systemViewNames = ['All', 'My Day', 'Important', 'Planned', 'Completed', 'Overdue'];
-            if (systemViewNames.map(n => n.toLowerCase()).includes(newListName.toLowerCase())) {
-                renameListModalError.textContent = `"${newListName}" is a system view and cannot be used for a custom list.`;
+            if (SYSTEM_VIEW_LIST_NAMES.map(n => n.toLowerCase()).includes(newListName.toLowerCase())) {
+                renameListModalError.textContent = `"${newListName}" is a system category and cannot be used for a custom category.`;
                 renameListModalError.style.display = 'block';
                 return;
             }
             if (allExistingListNames.includes(newListName.toLowerCase())) {
-                renameListModalError.textContent = 'A list with this name already exists!';
+                renameListModalError.textContent = 'A category with this name already exists!';
                 renameListModalError.style.display = 'block';
                 return;
             }
@@ -2268,13 +2901,13 @@
                      const errorData = await response.json();
                      throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.error}`);
                 }
-                showToast(`List "${oldListName}" renamed to "${newListName}".`, 'success');
-                currentListFilter = newListName; // Set active filter to new name
+                showToast(`Category "${oldListName}" renamed to "${newListName}".`, 'success');
+                currentListFilter = newListName;
                 hideModal('rename-list-modal');
-                await loadTodos(); // Reload everything to refresh UI
+                await loadTodos();
             } catch (error) {
                 console.error('Error renaming list:', error);
-                renameListModalError.textContent = 'Failed to rename list: ' + error.message;
+                renameListModalError.textContent = 'Failed to rename category: ' + error.message;
                 renameListModalError.style.display = 'block';
             }
         });
@@ -2285,7 +2918,7 @@
             deleteListNameDisplay.textContent = currentListFilter;
             deleteListModalError.style.display = 'none';
             showModal('delete-list-modal');
-            toggleListOptionsMenu(); // Close menu
+            toggleListOptionsMenu();
         });
 
         deleteListConfirmBtn.addEventListener('click', async () => {
@@ -2299,18 +2932,17 @@
                     const errorData = await response.json();
                     throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.error}`);
                 }
-                showToast(`List "${listToDelete}" deleted. Associated tasks moved to "My Day".`, 'success');
-                currentListFilter = 'My Day'; // Switch to 'My Day' after deletion
+                showToast(`Category "${listToDelete}" deleted. Associated notes/tasks moved to "My Day".`, 'success');
+                currentListFilter = 'My Day';
                 hideModal('delete-list-modal');
-                await loadTodos(); // Reload everything to refresh UI
+                await loadTodos();
             } catch (error) {
                 console.error('Error deleting list:', error);
-                deleteListModalError.textContent = 'Failed to delete list: ' + error.message;
+                deleteListModalError.textContent = 'Failed to delete category: ' + error.message;
                 deleteListModalError.style.display = 'block';
             }
         });
 
-        // Close list options menu if clicking anywhere else on the document
         document.addEventListener('click', (event) => {
             if (listOptionsMenu.style.display === 'block' &&
                 !moreOptionsButton.contains(event.target) &&
@@ -2319,9 +2951,8 @@
             }
         });
 
-
         document.getElementById('profile-tagline').addEventListener('blur', async (e) => {
-            const newTagline = e.target.innerText.trim(); // Use innerText for contenteditable
+            const newTagline = e.target.innerText.trim();
             try {
                 const response = await fetch(`${API_BASE_URL}/user/profile`, {
                     method: 'PUT',
@@ -2339,6 +2970,285 @@
             }
         });
 
+        // --- NEW DETAIL EDITOR LOGIC ---
+        async function openDetailEditor(id) {
+            try {
+                const response = await fetch(`${API_TODOS_URL}/${id}`, { headers: getAuthHeaders() });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.error}`);
+                }
+                const card = await response.json();
+                currentEditingCard = card;
+
+                // Show and populate detail editor
+                detailEditorView.style.display = 'flex';
+                document.body.style.overflow = 'hidden'; // Prevent scrolling background
+                
+                detailEditorTitle.value = card.text;
+                
+                const validatedType = card.type || 'todo';
+                detailEditorSelectedType = validatedType;
+
+                const typeRadio = document.querySelector(`input[name="detail-item-type"][value="${validatedType}"]`);
+                if (typeRadio) typeRadio.checked = true;
+                updateDetailEditorFields(validatedType);
+
+                // Populate fields
+                if (validatedType === 'note') {
+                    detailEditorNoteContent.value = card.subText || '';
+                    renderMarkdown();
+                } else {
+                    detailEditorTodoDescription.value = card.subText || '';
+                    detailEditorChecklistContainer.innerHTML = '';
+                    if (card.checklistItems && card.checklistItems.length > 0) {
+                        card.checklistItems.forEach(item => renderDetailChecklistItem(item));
+                    } else if (validatedType === 'todo') {
+                        // Ensure at least one empty item for new todos
+                        renderDetailChecklistItem({ text: '', completed: false });
+                    }
+                    detailEditorDuedate.value = card.dueDate ? new Date(card.dueDate).toISOString().slice(0, 16) : '';
+                }
+
+                // Reset mode to edit
+                setEditorMode('edit');
+
+                // Color picker
+                document.querySelectorAll('#detail-color-picker .color-swatch').forEach(s => s.classList.remove('active'));
+                const activeSwatch = document.querySelector(`#detail-color-picker .color-swatch[data-color="${card.color}"]`);
+                if (activeSwatch) activeSwatch.classList.add('active');
+                detailEditorSelectedColor = card.color;
+
+                // Category select
+                detailEditorCategorySelect.value = card.list;
+
+                // Pin button
+                detailPinBtn.classList.toggle('active', card.isImportant);
+                detailPinBtn.querySelector('i').className = card.isImportant ? 'fas fa-star' : 'far fa-star';
+
+                detailEditorTitle.focus(); // Focus on title
+                detailEditorTitle.selectionStart = detailEditorTitle.selectionEnd = detailEditorTitle.value.length; // Cursor at end
+            } catch (error) {
+                console.error('Error opening detail editor:', error);
+                showToast('Failed to open editor: ' + error.message, 'error');
+                closeDetailEditor(); // Close editor if error occurs
+            }
+        }
+
+        function updateDetailEditorFields(type) {
+            const modeToggle = document.getElementById('editor-mode-toggle');
+            const noteContainer = document.getElementById('detail-note-container');
+            
+            if (type === 'note') {
+                noteContainer.style.display = 'block';
+                detailEditorTodoSection.style.display = 'none';
+                modeToggle.style.display = 'flex';
+                detailEditorNoteContent.style.display = 'block';
+            } else {
+                noteContainer.style.display = 'none';
+                detailEditorTodoSection.style.display = 'flex';
+                modeToggle.style.display = 'none';
+            }
+        }
+
+        function setEditorMode(mode) {
+            const btns = document.querySelectorAll('#editor-mode-toggle .mode-btn');
+            btns.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+            btns.forEach(b => b.style.background = b.dataset.mode === mode ? 'var(--hover-color)' : 'none');
+
+            if (mode === 'preview') {
+                renderMarkdown();
+                detailEditorNoteContent.style.display = 'none';
+                document.getElementById('detail-editor-markdown-preview').style.display = 'block';
+            } else {
+                detailEditorNoteContent.style.display = 'block';
+                document.getElementById('detail-editor-markdown-preview').style.display = 'none';
+            }
+        }
+
+        function renderMarkdown() {
+            const preview = document.getElementById('detail-editor-markdown-preview');
+            preview.innerHTML = marked.parse(detailEditorNoteContent.value || '_No content_');
+        }
+
+        document.querySelectorAll('#editor-mode-toggle .mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => setEditorMode(btn.dataset.mode));
+        });
+
+        detailEditorTypeRadios.forEach(radio => {
+            radio.addEventListener('change', (event) => {
+                detailEditorSelectedType = event.target.value;
+                updateDetailEditorFields(detailEditorSelectedType);
+            });
+        });
+
+        detailColorPicker.addEventListener('click', (event) => {
+            const swatch = event.target.closest('.color-swatch');
+            if (swatch) {
+                document.querySelectorAll('#detail-color-picker .color-swatch').forEach(s => s.classList.remove('active'));
+                swatch.classList.add('active');
+                detailEditorSelectedColor = swatch.dataset.color;
+            }
+        });
+
+        detailPinBtn.addEventListener('click', () => {
+            detailPinBtn.classList.toggle('active');
+            detailPinBtn.querySelector('i').className = detailPinBtn.classList.contains('active') ? 'fas fa-star' : 'far fa-star';
+        });
+
+        detailDeleteBtn.addEventListener('click', async () => {
+            if (!currentEditingCard) return;
+            const confirmDelete = confirm(`Are you sure you want to permanently delete "${currentEditingCard.text}"? This cannot be undone.`);
+            if (!confirmDelete) return;
+
+            try {
+                const response = await fetch(`${API_TODOS_URL}/${currentEditingCard._id}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.error}`);
+                }
+                showToast(`${currentEditingCard.type === 'note' ? 'Note' : 'To-Do List'} deleted permanently.`, 'info');
+                closeDetailEditor(true); // Close and force reload
+            } catch (error) {
+                console.error('Error deleting card:', error);
+                showToast('Failed to delete: ' + error.message, 'error');
+            }
+        });
+
+        detailShareBtn.addEventListener('click', () => {
+            if (!currentEditingCard) return;
+            let shareContent = detailEditorTitle.value + '\n';
+            if (detailEditorSelectedType === 'note') {
+                shareContent += detailEditorNoteContent.value;
+            } else { // type === 'todo'
+                shareContent += (detailEditorTodoDescription.value ? detailEditorTodoDescription.value + '\n' : '');
+                Array.from(detailEditorChecklistContainer.children).forEach(itemDiv => {
+                    const checkbox = itemDiv.querySelector('input[type="checkbox"]');
+                    const text = itemDiv.querySelector('input[type="text"]').value;
+                    shareContent += `[${checkbox.checked ? 'x' : ' '}] ${text}\n`;
+                });
+                if (detailEditorDuedate.value) {
+                    shareContent += `Due: ${formatDueDate(detailEditorDuedate.value)}\n`;
+                }
+            }
+            shareContent = shareContent.trim();
+
+            if (navigator.share) {
+                navigator.share({
+                    title: detailEditorTitle.value,
+                    text: shareContent,
+                })
+                .then(() => showToast('Content shared!', 'success'))
+                .catch((error) => console.log('Error sharing', error));
+            } else if (navigator.clipboard) {
+                navigator.clipboard.writeText(shareContent)
+                    .then(() => showToast('Content copied to clipboard!', 'success'))
+                    .catch(err => {
+                        console.error('Failed to copy content:', err);
+                        showToast('Failed to copy content.', 'error');
+                    });
+            } else {
+                const tempInput = document.createElement('textarea');
+                tempInput.value = shareContent;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempInput);
+                showToast('Content copied to clipboard!', 'success');
+            }
+        });
+
+        detailSaveBtn.addEventListener('click', async () => {
+            if (!currentEditingCard) return;
+
+            const updatedTitle = detailEditorTitle.value.trim();
+            const updatedColor = detailEditorSelectedColor;
+            const updatedList = detailEditorCategorySelect.value;
+            const updatedIsImportant = detailPinBtn.classList.contains('active');
+            const updatedType = detailEditorSelectedType;
+            let updatedSubText = '';
+            let updatedDueDate = null;
+            let updatedChecklistItems = [];
+            let updatedCompletedStatus = false;
+
+            if (updatedTitle === '') {
+                showToast('Title cannot be empty.', 'error');
+                return;
+            }
+
+            if (updatedType === 'note') {
+                updatedSubText = detailEditorNoteContent.value.trim();
+            } else { // 'todo'
+                updatedSubText = detailEditorTodoDescription.value.trim();
+                updatedDueDate = detailEditorDuedate.value;
+                updatedChecklistItems = Array.from(detailEditorChecklistContainer.children).map(itemDiv => {
+                    const checkbox = itemDiv.querySelector('input[type="checkbox"]');
+                    const textInput = itemDiv.querySelector('input[type="text"]');
+                    const id = itemDiv.dataset.itemId;
+                    const itemData = {
+                        text: textInput.value.trim(),
+                        completed: checkbox.checked
+                    };
+                    
+                    // Only include _id if it's a valid ObjectId (24 chars)
+                    if (id && id.length === 24) {
+                        itemData._id = id;
+                    }
+                    
+                    return itemData;
+                }).filter(item => item.text !== ''); // Filter out empty checklist items
+
+                if (updatedChecklistItems.length > 0 && updatedChecklistItems.every(item => item.completed)) {
+                    updatedCompletedStatus = true;
+                }
+            }
+
+            const payload = {
+                text: updatedTitle,
+                subText: updatedSubText,
+                color: updatedColor,
+                list: updatedList,
+                isImportant: updatedIsImportant,
+                type: updatedType,
+                dueDate: updatedDueDate ? new Date(updatedDueDate).toISOString() : null,
+                checklistItems: updatedChecklistItems,
+                completed: updatedCompletedStatus
+            };
+            
+            try {
+                const response = await fetch(`${API_TODOS_URL}/${currentEditingCard._id}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.details || errorData.error}`);
+                }
+                showToast(`${updatedType === 'note' ? 'Note' : 'To-Do List'} updated!`, 'success');
+                closeDetailEditor(true); // Close and force reload
+            } catch (error) {
+                console.error('Error saving card:', error);
+                showToast('Failed to save changes: ' + error.message, 'error');
+            }
+        });
+
+        detailCloseBtn.addEventListener('click', () => {
+            closeDetailEditor(); // Just close, discard unsaved changes
+        });
+
+        function closeDetailEditor(forceReload = false) {
+            detailEditorView.style.display = 'none';
+            document.body.style.overflow = 'auto';
+            currentEditingCard = null;
+            if (forceReload) {
+                loadTodos();
+            }
+        }
+        
         // Initial setup on page load
         document.addEventListener('DOMContentLoaded', () => {
             currentDateElem.textContent = getFormattedDate();
@@ -2353,6 +3263,20 @@
                 authOverlay.style.display = 'flex';
             } else {
                 loadTodos();
+                // Initialize new item type selection
+                newTodoTypeRadios.forEach(radio => {
+                    if (radio.value === selectedNewTodoType) {
+                        radio.checked = true;
+                    }
+                });
+                // Trigger change to set initial visibility of fields
+                const initialChangeEvent = new Event('change');
+                document.querySelector(`input[name="new-item-type"][value="${selectedNewTodoType}"]`).dispatchEvent(initialChangeEvent);
+
+                // Add an initial checklist item for new todos
+                if (selectedNewTodoType === 'todo' && newTodoChecklistItemsContainer.children.length === 0) {
+                    addNewChecklistItemInput(newTodoChecklistItemsContainer);
+                }
             }
         });
     </script>
