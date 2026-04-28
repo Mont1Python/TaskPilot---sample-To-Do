@@ -11,10 +11,14 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || 'taskpilot_secret_key_88';
 
+// Define system view list names to prevent user manipulation
+const SYSTEM_VIEW_LIST_NAMES = ['All', 'My Day', 'Important', 'Planned', 'Completed', 'Overdue'];
+
 const corsOptions = {
-    origin: process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',') : '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: false
 };
 app.use(cors(corsOptions));
 app.use(express.json());
@@ -41,16 +45,16 @@ const User = mongoose.model('User', userSchema);
 
 const todoSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    text: { type: String, required: true }, // Main title (note title or to-do list title)
-    completed: { type: Boolean, default: false }, // Overall completion for to-do list (derived or manual)
-    list: { type: String, default: 'My Day' }, // Category
-    subText: { type: String, default: '' }, // Note content or to-do list description
+    text: { type: String, required: true },
+    completed: { type: Boolean, default: false },
+    list: { type: String, default: 'My Day' },
+    subText: { type: String, default: '' },
     isImportant: { type: Boolean, default: false },
     dueDate: { type: Date, default: null },
     color: { type: String, default: 'transparent' },
-    type: { type: String, enum: ['todo', 'note'], default: 'todo' }, // 'todo' for checklist, 'note' for simple note
-    checklistItems: [{ // Array for checklist items
-        _id: { type: mongoose.Schema.Types.ObjectId, default: () => new mongoose.Types.ObjectId() }, // Unique ID for each item
+    type: { type: String, enum: ['todo', 'note'], default: 'todo' },
+    checklistItems: [{
+        _id: { type: mongoose.Schema.Types.ObjectId, default: () => new mongoose.Types.ObjectId() },
         text: { type: String, required: true },
         completed: { type: Boolean, default: false },
         createdAt: { type: Date, default: Date.now }
@@ -136,14 +140,13 @@ app.get('/todos/search', auth, async (req, res) => {
             $or: [
                 { text: { $regex: q, $options: 'i' } },
                 { subText: { $regex: q, $options: 'i' } },
-                { 'checklistItems.text': { $regex: q, $options: 'i' } } // Search within checklist items
+                { 'checklistItems.text': { $regex: q, $options: 'i' } }
             ]
         };
         const todos = await Todo.find(query)
                                 .sort({ isImportant: -1, dueDate: 1, completed: 1, createdAt: -1 });
         res.json(todos);
     } catch (error) {
-        console.error('Search API error:', error);
         console.error('Search API error:', error);
         res.status(500).json({ error: 'Failed to perform search', details: error.message });
     }
@@ -157,10 +160,7 @@ app.get('/todos', auth, async (req, res) => {
         if (list === 'Important') {
             query.isImportant = true;
             query.completed = false;
-            query.completed = false;
         } else if (list === 'Planned') {
-            query.dueDate = { $ne: null };
-            query.completed = false;
             query.dueDate = { $ne: null };
             query.completed = false;
         } else if (list === 'Completed') {
@@ -172,16 +172,16 @@ app.get('/todos', auth, async (req, res) => {
             query.list = 'My Day';
             query.completed = false;
         } else if (list && list !== 'All') {
-            query.completed = false;
-        } else if (list && list !== 'All') {
             query.list = list;
-            query.completed = false;
             query.completed = false;
         }
         const todos = await Todo.find(query)
                                 .sort({ isImportant: -1, dueDate: 1, completed: 1, createdAt: -1 });
         res.json(todos);
-    } catch (error) { console.error('Fetch Todos API error:', error); res.status(500).json({ error: 'Failed to fetch', details: error.message }); }
+    } catch (error) { 
+        console.error('Fetch Todos API error:', error); 
+        res.status(500).json({ error: 'Failed to fetch', details: error.message }); 
+    }
 });
 
 app.get('/todos/:id', auth, async (req, res) => {
@@ -192,12 +192,14 @@ app.get('/todos/:id', auth, async (req, res) => {
         const todo = await Todo.findOne({ _id: req.params.id, userId: req.user._id });
         if (!todo) return res.status(404).json({ error: 'Not found' });
         res.json(todo);
-    } catch (error) { res.status(500).json({ error: 'Failed to fetch todo' }); }
+    } catch (error) { 
+        res.status(500).json({ error: 'Failed to fetch todo' }); 
+    }
 });
 
 app.post('/todos', auth, async (req, res) => {
     try {
-        const { text, list, subText, isImportant, dueDate, color, completed } = req.body;
+        const { text, list, subText, isImportant, dueDate, color, completed, type, checklistItems } = req.body;
         if (!text || text.trim() === '') {
             return res.status(400).json({ error: 'Note/Task title is required.' });
         }
@@ -209,14 +211,12 @@ app.post('/todos', auth, async (req, res) => {
             isImportant: isImportant || false,
             color: color || 'transparent',
             completed: completed || false,
+            type: type || 'todo',
             userId: req.user._id
         };
 
         if (data.type === 'todo') {
-            data.subText = subText ? subText.trim() : ''; 
             data.dueDate = dueDate || null;
-            data.completed = false; // Default for new todo list
-            // Ensure checklistItems are valid and have IDs
             data.checklistItems = (checklistItems || []).filter(item => item.text && item.text.trim() !== '')
                                                         .map(item => {
                                                             const newItem = { ...item, completed: !!item.completed };
@@ -225,11 +225,10 @@ app.post('/todos', auth, async (req, res) => {
                                                             }
                                                             return newItem;
                                                         });
-            // Set overall completed status if all checklist items are completed on creation
             if (data.checklistItems.length > 0 && data.checklistItems.every(item => item.completed)) {
                 data.completed = true;
             }
-        } else { // type === 'note'
+        } else {
             data.dueDate = null;
             data.completed = false;
             data.checklistItems = [];
@@ -238,36 +237,37 @@ app.post('/todos', auth, async (req, res) => {
         const todo = new Todo(data);
         await todo.save();
         res.status(201).json(todo);
-    } catch (error) { console.error('Add Todo API error:', error); res.status(400).json({ error: 'Failed to add', details: error.message }); }
+    } catch (error) { 
+        console.error('Add Todo API error:', error); 
+        res.status(400).json({ error: 'Failed to add', details: error.message }); 
+    }
 });
 
 app.put('/todos/:id', auth, async (req, res) => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ error: 'Invalid Task ID format' });
+        }
+
+        const currentTodo = await Todo.findOne({ _id: req.params.id, userId: req.user._id });
+        if (!currentTodo) return res.status(404).json({ error: 'Not found' });
+
         const updates = req.body;
         if (updates.list) updates.list = updates.list.trim();
-        // If text is provided, trim it
         if (updates.text) updates.text = updates.text.trim();
-        // If subText is provided, trim it
         if (updates.subText) updates.subText = updates.subText.trim();
 
-
-        // Handle type change logic
         if (updates.type && updates.type !== currentTodo.type) {
             if (updates.type === 'note') {
                 updates.completed = false;
                 updates.dueDate = null;
                 updates.checklistItems = [];
             } else if (updates.type === 'todo') {
-                updates.subText = ''; // Clear description when converting to todo
-                updates.completed = false; // Reset completion when converting to todo
-                // Keep existing checklistItems if present, otherwise initialize empty
+                updates.completed = false;
                 if (!updates.checklistItems) updates.checklistItems = [];
             }
         }
 
-        // SubText is allowed for both notes (content) and todos (description)
-
-        // Handle checklistItems updates
         if (updates.checklistItems !== undefined) {
              updates.checklistItems = updates.checklistItems.filter(item => item.text && item.text.trim() !== '')
                                                             .map(item => {
@@ -277,7 +277,6 @@ app.put('/todos/:id', auth, async (req, res) => {
                                                                 }
                                                                 return newItem;
                                                             });
-             // Update overall 'completed' status based on checklist items if it's a 'todo' type
              if (currentTodo.type === 'todo' || (updates.type && updates.type === 'todo')) {
                 if (updates.checklistItems.length > 0 && updates.checklistItems.every(item => item.completed)) {
                     updates.completed = true;
@@ -285,23 +284,14 @@ app.put('/todos/:id', auth, async (req, res) => {
                     updates.completed = false;
                 }
              }
-        } else if (currentTodo.type === 'todo' && updates.completed !== undefined) {
-            // If main completed status is updated, but checklistItems wasn't
-            // And all sub items were completed, but now it's uncompleted manually
-            // We should uncomplete all sub items too.
-            // Or if all sub items are completed, and we manually complete the parent.
-            if (updates.completed === true && currentTodo.checklistItems.length > 0) {
-                 updates.checklistItems = currentTodo.checklistItems.map(item => ({...item.toObject(), completed: true}));
-            } else if (updates.completed === false && currentTodo.checklistItems.length > 0 && currentTodo.checklistItems.every(item => item.completed)) {
-                updates.checklistItems = currentTodo.checklistItems.map(item => ({...item.toObject(), completed: false}));
-            }
         }
 
-
         const todo = await Todo.findOneAndUpdate({ _id: req.params.id, userId: req.user._id }, updates, { new: true, runValidators: true });
-        if (!todo) return res.status(404).json({ error: 'Not found' });
         res.json(todo);
-    } catch (error) { console.error('Update Todo API error:', error); res.status(400).json({ error: 'Failed to update', details: error.message }); }
+    } catch (error) { 
+        console.error('Update Todo API error:', error); 
+        res.status(400).json({ error: 'Failed to update', details: error.message }); 
+    }
 });
 
 app.delete('/todos/:id', auth, async (req, res) => {
@@ -314,12 +304,11 @@ app.delete('/todos/:id', auth, async (req, res) => {
             return res.status(404).json({ error: 'Task not found or unauthorized' });
         }
         res.status(204).send();
-        res.status(204).send();
-    } catch (error) { console.error('Delete Todo API error:', error); res.status(500).json({ error: 'Failed to delete task', details: error.message }); }
+    } catch (error) { 
+        console.error('Delete Todo API error:', error); 
+        res.status(500).json({ error: 'Failed to delete task', details: error.message }); 
+    }
 });
-
-// Define system view list names to prevent user manipulation (also used in frontend)
-const SYSTEM_VIEW_LIST_NAMES = ['All', 'My Day', 'Important', 'Planned', 'Completed', 'Overdue'];
 
 app.get('/lists/summary', auth, async (req, res) => {
     try {
@@ -344,10 +333,11 @@ app.get('/lists/summary', auth, async (req, res) => {
             userName: req.user.name,
             tagline: req.user.tagline
         });
-    } catch (error) { console.error('Fetch Summary API error:', error); res.status(500).json({ error: 'Failed to fetch summary', details: error.message }); }
+    } catch (error) { 
+        console.error('Fetch Summary API error:', error); 
+        res.status(500).json({ error: 'Failed to fetch summary', details: error.message }); 
+    }
 });
-
-const SYSTEM_VIEW_LIST_NAMES = ['All', 'My Day', 'Important', 'Planned', 'Completed', 'Overdue'];
 
 app.put('/lists/:oldName/rename', auth, async (req, res) => {
     try {
@@ -368,7 +358,10 @@ app.put('/lists/:oldName/rename', auth, async (req, res) => {
 
         const result = await Todo.updateMany({ userId: req.user._id, list: oldName }, { list: newName });
         res.json({ modifiedCount: result.modifiedCount });
-    } catch (error) { console.error('Rename List API error:', error); res.status(500).json({ error: 'Internal Server Error', details: error.message }); }
+    } catch (error) { 
+        console.error('Rename List API error:', error); 
+        res.status(500).json({ error: 'Internal Server Error', details: error.message }); 
+    }
 });
 
 app.delete('/lists/:name', auth, async (req, res) => {
@@ -381,7 +374,10 @@ app.delete('/lists/:name', auth, async (req, res) => {
         
         const result = await Todo.updateMany({ userId: req.user._id, list: name }, { list: 'My Day' });
         res.json({ modifiedCount: result.modifiedCount, message: `Notes/tasks from category "${name}" moved to "My Day".` });
-    } catch (error) { console.error('Delete List API error:', error); res.status(500).json({ error: 'Internal Server Error', details: error.message }); }
+    } catch (error) { 
+        console.error('Delete List API error:', error); 
+        res.status(500).json({ error: 'Internal Server Error', details: error.message }); 
+    }
 });
 
 app.listen(PORT, () => {
@@ -389,6 +385,5 @@ app.listen(PORT, () => {
     console.log('----------------------------------------------------');
     console.log('Frontend will connect to this server.');
     console.log('Data is now persisted in MongoDB.');
-    console.log(`Health check available at http://localhost:${PORT}/health`);
     console.log('----------------------------------------------------');
 });

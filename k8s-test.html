@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do App - Kubernetes Test</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; }
+        .container { max-width: 600px; margin: 40px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        h1 { color: #333; margin-bottom: 20px; text-align: center; }
+        .section { margin-bottom: 30px; }
+        .section h2 { font-size: 16px; color: #666; margin-bottom: 10px; border-bottom: 2px solid #007bff; padding-bottom: 5px; }
+        input, textarea { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: inherit; }
+        button { width: 100%; padding: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #0056b3; }
+        .response { background: #f8f9fa; padding: 15px; border-radius: 4px; margin-top: 10px; max-height: 300px; overflow-y: auto; border-left: 4px solid #28a745; }
+        .error { border-left-color: #dc3545; background: #f8d7da; }
+        .status { padding: 10px; border-radius: 4px; margin-top: 10px; text-align: center; font-weight: bold; }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        code { background: #e9ecef; padding: 2px 6px; border-radius: 3px; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 To-Do App - Kubernetes Deployment Test</h1>
+        
+        <div class="section">
+            <h2>Cluster Status</h2>
+            <button onclick="testHealth()">Test Backend Health</button>
+            <div id="health-response" class="response" style="display:none;"></div>
+        </div>
+
+        <div class="section">
+            <h2>User Authentication</h2>
+            <input type="text" id="name" placeholder="Full Name" value="Test User">
+            <input type="email" id="email" placeholder="Email" value="test@example.com">
+            <input type="password" id="password" placeholder="Password" value="password123">
+            <button onclick="signup()">Sign Up</button>
+            <div id="signup-response" class="response" style="display:none;"></div>
+            <button onclick="login()" style="margin-top: 10px;">Login</button>
+            <div id="login-response" class="response" style="display:none;"></div>
+        </div>
+
+        <div class="section">
+            <h2>Create To-Do</h2>
+            <input type="text" id="todo-title" placeholder="To-Do Title" value="My First Task">
+            <input type="text" id="todo-list" placeholder="List/Category" value="My Day">
+            <textarea id="todo-description" placeholder="Description" rows="3">This is a test task on Kubernetes</textarea>
+            <button onclick="createTodo()">Create To-Do</button>
+            <div id="todo-response" class="response" style="display:none;"></div>
+        </div>
+
+        <div class="section">
+            <h2>Configuration</h2>
+            <p style="color: #666; margin-bottom: 10px;">API Endpoint: <code id="endpoint">http://localhost:8080</code></p>
+            <input type="text" id="custom-endpoint" placeholder="Custom endpoint (leave blank for http://localhost:8080)">
+            <button onclick="setEndpoint()">Update Endpoint</button>
+        </div>
+
+        <div id="global-status" class="status" style="display:none;"></div>
+    </div>
+
+    <script>
+        let API_ENDPOINT = 'http://localhost:8080';
+        let authToken = null;
+
+        function setEndpoint() {
+            const custom = document.getElementById('custom-endpoint').value.trim();
+            if (custom) {
+                API_ENDPOINT = custom;
+            }
+            document.getElementById('endpoint').textContent = API_ENDPOINT;
+            showStatus('Endpoint updated: ' + API_ENDPOINT, 'success');
+        }
+
+        async function testHealth() {
+            try {
+                const response = await fetch(API_ENDPOINT + '/', { method: 'GET' });
+                const data = await response.text();
+                showResponse('health-response', { status: response.status, data: data }, 'success');
+            } catch (error) {
+                showResponse('health-response', { error: error.message }, 'error');
+            }
+        }
+
+        async function signup() {
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (!name || !email || !password) {
+                showStatus('Please fill all fields', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(API_ENDPOINT + '/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    authToken = data.token;
+                    showResponse('signup-response', data, 'success');
+                    showStatus('Signup successful! Token saved.', 'success');
+                } else {
+                    showResponse('signup-response', data, 'error');
+                }
+            } catch (error) {
+                showResponse('signup-response', { error: error.message }, 'error');
+            }
+        }
+
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                showStatus('Please fill email and password', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(API_ENDPOINT + '/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    authToken = data.token;
+                    showResponse('login-response', data, 'success');
+                    showStatus('Login successful! Token saved.', 'success');
+                } else {
+                    showResponse('login-response', data, 'error');
+                }
+            } catch (error) {
+                showResponse('login-response', { error: error.message }, 'error');
+            }
+        }
+
+        async function createTodo() {
+            if (!authToken) {
+                showStatus('Please sign up or login first', 'error');
+                return;
+            }
+
+            const text = document.getElementById('todo-title').value;
+            const list = document.getElementById('todo-list').value;
+            const subText = document.getElementById('todo-description').value;
+
+            if (!text) {
+                showStatus('Please fill to-do title', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(API_ENDPOINT + '/todos', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + authToken
+                    },
+                    body: JSON.stringify({ text, list, subText, type: 'todo' })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showResponse('todo-response', data, 'success');
+                    showStatus('To-Do created successfully!', 'success');
+                } else {
+                    showResponse('todo-response', data, 'error');
+                }
+            } catch (error) {
+                showResponse('todo-response', { error: error.message }, 'error');
+            }
+        }
+
+        function showResponse(elementId, data, type) {
+            const element = document.getElementById(elementId);
+            element.className = 'response ' + (type === 'error' ? 'error' : 'success');
+            element.textContent = JSON.stringify(data, null, 2);
+            element.style.display = 'block';
+        }
+
+        function showStatus(message, type) {
+            const element = document.getElementById('global-status');
+            element.className = 'status status-' + type;
+            element.textContent = message;
+            element.style.display = 'block';
+            setTimeout(() => { element.style.display = 'none'; }, 5000);
+        }
+    </script>
+</body>
+</html>

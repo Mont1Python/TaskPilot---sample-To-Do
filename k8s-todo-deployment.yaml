@@ -20,8 +20,8 @@ metadata:
   namespace: todo-app
 type: Opaque
 stringData:
-  MONGODB_URI: "mongodb://raj0106:nahtnam01062000@ac-dmf2dgz-shard-00-00.dv4icz3.mongodb.net:27017,ac-dmf2dgz-shard-00-01.dv4icz3.mongodb.net:27017,ac-dmf2dgz-shard-00-02.dv4icz3.mongodb.net:27017/?ssl=true&replicaSet=atlas-yu3xyi-shard-0&authSource=admin&appName=To-DoList"
-  JWT_SECRET: "bd7aca6f3a6249730372dc9ae31ac799fcebb1da4c6f71ee9d0e1b9d5b263dc3731ec5e5b641496d0707120de5dd33193cd16ab823c148cb16d90315b4786019"
+  MONGODB_URI: "PLACEHOLDER_SECRET"
+  JWT_SECRET: "PLACEHOLDER_SECRET"
 ---
 apiVersion: apps/v1
 kind: Deployment
