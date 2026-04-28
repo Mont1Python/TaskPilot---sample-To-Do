@@ -1,0 +1,419 @@
+================================================================================
+                   KUBERNETES DEPLOYMENT - COPY & PASTE COMMANDS
+================================================================================
+
+Follow this exact sequence. Copy and paste each command in PowerShell.
+
+================================================================================
+
+SETUP & VERIFICATION (Run these first):
+
+# Check cluster is running
+kubectl cluster-info
+
+# Check all nodes are Ready
+kubectl get nodes
+
+# Expected output: All nodes should show "Ready"
+
+================================================================================
+
+PROJECT SETUP:
+
+# Navigate to project folder
+cd "G:\MCA Project\To-Do sample updated\To-Do sample"
+
+# Verify you're in the right folder
+pwd  # Should show: G:\MCA Project\To-Do sample updated\To-Do sample
+
+# List files to confirm
+ls *.yaml  # Should show: k8s-todo-deployment.yaml
+
+================================================================================
+
+BUILD DOCKER IMAGE:
+
+# Build image (takes 30-60 seconds)
+docker build -t todo-app:latest .
+
+# Verify image was built
+docker images | grep todo-app
+
+# Expected: Should show "todo-app" with tag "latest"
+
+================================================================================
+
+LOAD IMAGE TO CLUSTER:
+
+# For KIND cluster:
+kind load docker-image todo-app:latest
+
+# OR for Minikube:
+minikube image load todo-app:latest
+
+# For remote clusters - SKIP this step (use registry instead)
+
+================================================================================
+
+DEPLOY TO KUBERNETES:
+
+# Apply the manifest (creates everything)
+kubectl apply -f k8s-todo-deployment.yaml
+
+# Expected output should show:
+#   namespace/todo-app created
+#   configmap/todo-app-config created
+#   secret/todo-app-secrets created
+#   deployment.apps/todo-backend created
+#   service/todo-backend-service created
+#   horizontalpodautoscaler.autoscaling/todo-backend-hpa created
+#   poddisruptionbudget.policy/todo-backend-pdb created
+
+================================================================================
+
+VERIFY PODS ARE STARTING:
+
+# Watch pods come up (press Ctrl+C to stop watching)
+kubectl get pods -n todo-app -w
+
+# Alternative: Run repeatedly until both show "Running"
+kubectl get pods -n todo-app
+
+# Expected after 10-30 seconds:
+#   NAME                           READY   STATUS    RESTARTS   AGE
+#   todo-backend-58d4c7f-abc12     1/1     Running   0          10s
+#   todo-backend-58d4c7f-xyz78     1/1     Running   0          10s
+
+================================================================================
+
+GET YOUR APPLICATION URL:
+
+# Get the service information
+kubectl get svc -n todo-app
+
+# Expected output shows:
+#   NAME                    TYPE           CLUSTER-IP    EXTERNAL-IP   PORT(S)
+#   todo-backend-service    LoadBalancer   10.96.1.234   <IP>          80:32456/TCP
+
+# If EXTERNAL-IP is assigned (cloud clusters):
+#   Open browser: http://<EXTERNAL-IP>
+
+# If EXTERNAL-IP shows "pending" (local clusters):
+#   Get the NodePort number from the output (e.g., 32456)
+#   Then get node IP with:
+#   kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="ExternalIP")].address}'
+#   Open browser: http://<node-ip>:32456
+
+================================================================================
+
+ALTERNATIVE: USE PORT FORWARD FOR QUICK TESTING:
+
+# Forward port to local machine
+kubectl port-forward svc/todo-backend-service 3001:80 -n todo-app
+
+# Open browser: http://localhost:3001
+
+# Stop with Ctrl+C
+
+================================================================================
+
+VIEW APPLICATION LOGS:
+
+# Stream logs from deployment
+kubectl logs -f deployment/todo-backend -n todo-app
+
+# Should show:
+#   "To-Do List Backend API running on http://localhost:3001"
+#   "MongoDB connected"
+
+# Press Ctrl+C to stop viewing logs
+
+================================================================================
+
+COMPLETE VERIFICATION:
+
+# Run verification script
+./verify-todo-k8s.sh
+
+# Or manually check each component:
+
+# 1. Check namespace
+kubectl get namespace todo-app
+
+# 2. Check deployment
+kubectl get deployment -n todo-app
+
+# 3. Check pods
+kubectl get pods -n todo-app
+
+# 4. Check services
+kubectl get svc -n todo-app
+
+# 5. Check HPA
+kubectl get hpa -n todo-app
+
+# 6. Check pod events
+kubectl get events -n todo-app
+
+================================================================================
+
+MONITOR DEPLOYMENT:
+
+# Watch pods in real-time
+kubectl get pods -n todo-app -w
+
+# Check resource usage (requires metrics-server)
+kubectl top pods -n todo-app
+
+# View all resources in namespace
+kubectl get all -n todo-app
+
+# Get detailed pod information
+kubectl describe pod <pod-name> -n todo-app
+
+# Get deployment details
+kubectl describe deployment todo-backend -n todo-app
+
+# Get service details
+kubectl describe svc todo-backend-service -n todo-app
+
+================================================================================
+
+SCALING THE DEPLOYMENT:
+
+# Scale to 3 replicas
+kubectl scale deployment todo-backend -n todo-app --replicas=3
+
+# Scale to 5 replicas
+kubectl scale deployment todo-backend -n todo-app --replicas=5
+
+# Scale back to 2 replicas
+kubectl scale deployment todo-backend -n todo-app --replicas=2
+
+# Watch the scaling happen
+kubectl get pods -n todo-app -w
+
+# Check HPA status
+kubectl get hpa -n todo-app
+
+# Watch HPA in real-time
+kubectl get hpa -n todo-app -w
+
+================================================================================
+
+UPDATE/REDEPLOY APPLICATION:
+
+# If you change the code:
+
+# 1. Rebuild image
+docker build -t todo-app:latest .
+
+# 2. Load to cluster
+kind load docker-image todo-app:latest
+
+# 3. Restart deployment
+kubectl rollout restart deployment/todo-backend -n todo-app
+
+# 4. Wait for new pods
+kubectl rollout status deployment/todo-backend -n todo-app
+
+# 5. Verify new version is running
+kubectl logs -f deployment/todo-backend -n todo-app
+
+================================================================================
+
+ROLLBACK TO PREVIOUS VERSION:
+
+# View rollout history
+kubectl rollout history deployment/todo-backend -n todo-app
+
+# Rollback to previous version
+kubectl rollout undo deployment/todo-backend -n todo-app
+
+# Rollback to specific revision (e.g., revision 2)
+kubectl rollout undo deployment/todo-backend -n todo-app --to-revision=2
+
+================================================================================
+
+ADVANCED MONITORING:
+
+# Get all pods with node information
+kubectl get pods -n todo-app -o wide
+
+# Get all resources in namespace
+kubectl get all -n todo-app
+
+# Get pod logs with previous (if pod crashed)
+kubectl logs <pod-name> -n todo-app --previous
+
+# Get logs from specific container
+kubectl logs <pod-name> -n todo-app -c todo-backend
+
+# Tail logs from all pods
+kubectl logs -f deployment/todo-backend -n todo-app --all-containers=true
+
+# Get pod's resource requests and limits
+kubectl describe deployment todo-backend -n todo-app | grep -A 10 "Limits\|Requests"
+
+# Check autoscaling metrics
+kubectl get hpa -n todo-app -o yaml
+
+# Watch autoscaler in action
+kubectl get hpa -n todo-app -w
+
+================================================================================
+
+TROUBLESHOOTING COMMANDS:
+
+# If pod won't start - check events
+kubectl describe pod <pod-name> -n todo-app
+
+# View events sorted by time
+kubectl get events -n todo-app --sort-by='.lastTimestamp'
+
+# Check node status
+kubectl describe nodes
+
+# Check if nodes have resources
+kubectl top nodes
+
+# Check image is loaded
+docker images | grep todo-app
+
+# Check pod readiness
+kubectl get pods -n todo-app -o jsonpath='{.items[*].status.conditions[?(@.type=="Ready")]}'
+
+# Execute command in pod
+kubectl exec -it <pod-name> -n todo-app -- bash
+
+# Forward port for debugging
+kubectl port-forward pod/<pod-name> 3001:3001 -n todo-app
+
+================================================================================
+
+CLEANUP COMMANDS:
+
+# Delete deployment
+kubectl delete deployment todo-backend -n todo-app
+
+# Delete service
+kubectl delete svc todo-backend-service -n todo-app
+
+# Delete entire namespace (removes everything)
+kubectl delete namespace todo-app
+
+# Delete and reapply manifest
+kubectl delete -f k8s-todo-deployment.yaml
+kubectl apply -f k8s-todo-deployment.yaml
+
+================================================================================
+
+GET INFORMATION:
+
+# Get cluster information
+kubectl cluster-info
+
+# Get current context
+kubectl config current-context
+
+# List all contexts
+kubectl config get-contexts
+
+# Switch context (if needed)
+kubectl config use-context <context-name>
+
+# Get API resources
+kubectl api-resources
+
+# Get API versions
+kubectl api-versions
+
+# Get Kubernetes version
+kubectl version
+
+================================================================================
+
+QUICK REFERENCE:
+
+MOST COMMON COMMANDS:
+
+# Deploy
+kubectl apply -f k8s-todo-deployment.yaml
+
+# Check pods
+kubectl get pods -n todo-app
+
+# View logs
+kubectl logs -f deployment/todo-backend -n todo-app
+
+# Get service info
+kubectl get svc -n todo-app
+
+# Scale
+kubectl scale deployment todo-backend -n todo-app --replicas=3
+
+# Delete
+kubectl delete namespace todo-app
+
+================================================================================
+
+EXPECTED URLS:
+
+LOCAL CLUSTER (KIND/Minikube):
+  Option 1: http://localhost:3001  (via port-forward)
+  Option 2: http://<node-ip>:<nodeport>  (via NodePort)
+
+CLOUD CLUSTER:
+  http://<EXTERNAL-IP>  (via LoadBalancer)
+
+PORT-FORWARD (Temporary, for testing):
+  kubectl port-forward svc/todo-backend-service 3001:80 -n todo-app
+  Then: http://localhost:3001
+
+================================================================================
+
+EXAMPLE SESSION:
+
+# Full example from start to finish:
+
+cd "G:\MCA Project\To-Do sample updated\To-Do sample"
+
+docker build -t todo-app:latest .
+
+kind load docker-image todo-app:latest
+
+kubectl apply -f k8s-todo-deployment.yaml
+
+kubectl get pods -n todo-app -w  # Wait until both Running
+
+kubectl get svc -n todo-app  # Get EXTERNAL-IP or NodePort
+
+# Open browser with the IP/port
+
+kubectl logs -f deployment/todo-backend -n todo-app  # View logs
+
+kubectl scale deployment todo-backend -n todo-app --replicas=3  # Scale
+
+kubectl get pods -n todo-app  # Verify 3 pods running
+
+# Test app in browser (sign up, add todos)
+
+kubectl delete namespace todo-app  # Cleanup (optional)
+
+================================================================================
+
+YOUR APP IS DEPLOYED!
+
+Now follow these steps:
+
+1. Get your URL: kubectl get svc -n todo-app
+2. Open in browser
+3. Sign up with an email
+4. Add a to-do item
+5. Verify it works!
+
+For detailed information, read:
+  KUBERNETES_GUIDE.md
+  KUBERNETES_DEPLOYMENT.txt
+
+================================================================================

@@ -1,0 +1,167 @@
+================================================================================
+                   EXECUTE NOW - KUBERNETES DEPLOYMENT
+================================================================================
+
+COPY AND PASTE THESE COMMANDS IN POWERSHELL (ONE BY ONE):
+
+================================================================================
+
+1. Check cluster is running
+
+kubectl cluster-info
+
+(Should show cluster details, not errors)
+
+================================================================================
+
+2. Navigate to project folder
+
+cd "G:\MCA Project\To-Do sample updated\To-Do sample"
+
+================================================================================
+
+3. Build Docker image
+
+docker build -t todo-app:latest .
+
+(Wait for build to complete - takes 30-60 seconds)
+
+================================================================================
+
+4. Load image to cluster
+
+kind load docker-image todo-app:latest
+
+(Or: minikube image load todo-app:latest)
+
+================================================================================
+
+5. Deploy to Kubernetes
+
+kubectl apply -f k8s-todo-deployment.yaml
+
+(Should show resources created)
+
+================================================================================
+
+6. Check pods are running
+
+kubectl get pods -n todo-app
+
+(Wait until both pods show "Running" and "1/1")
+
+Keep running this until you see:
+  NAME                         READY STATUS   RESTARTS AGE
+  todo-backend-xxx-abc         1/1   Running  0        10s
+  todo-backend-xxx-def         1/1   Running  0        10s
+
+================================================================================
+
+7. Get your application URL
+
+kubectl get svc -n todo-app
+
+(Look at the EXTERNAL-IP column)
+
+If it shows an IP address:
+  Open in browser: http://<IP>
+
+If it shows "pending" (local cluster):
+  Get the NodePort from output (e.g., 32456)
+  Get node IP: kubectl get nodes -o wide
+  Open in browser: http://<node-ip>:32456
+
+================================================================================
+
+8. Test the application
+
+1. Click "Sign Up"
+2. Enter email: test@example.com
+3. Enter password: test123456
+4. Click "Sign Up"
+5. Add a to-do: "Running on Kubernetes!"
+6. Mark it complete
+7. Refresh page
+
+Data should persist!
+
+✓ SUCCESS! Your app is running on Kubernetes!
+
+================================================================================
+
+VERIFY IT'S WORKING:
+
+Run this command:
+
+./verify-todo-k8s.sh
+
+Should show:
+  ✓ Connected to cluster
+  ✓ Namespace exists
+  ✓ Pods running
+  ✓ Service endpoints active
+  ✓ To-Do App is RUNNING on Kubernetes
+
+================================================================================
+
+VIEW LOGS:
+
+kubectl logs -f deployment/todo-backend -n todo-app
+
+Should show:
+  "To-Do List Backend API running..."
+  "MongoDB connected"
+
+Press Ctrl+C to stop viewing logs
+
+================================================================================
+
+SCALE YOUR APP:
+
+Scale to 3 pods:
+
+kubectl scale deployment todo-backend -n todo-app --replicas=3
+
+Watch new pods start:
+
+kubectl get pods -n todo-app -w
+
+================================================================================
+
+CONGRATULATIONS!
+
+Your To-Do application is now running on Kubernetes with:
+
+  ✓ 2-5 replicas (auto-scaling)
+  ✓ LoadBalancer service
+  ✓ High availability
+  ✓ MongoDB cloud storage
+  ✓ Auto-restart on failures
+  ✓ Zero-downtime updates
+
+================================================================================
+
+NEXT STEPS:
+
+Monitor:
+  kubectl logs -f deployment/todo-backend -n todo-app
+
+Scale:
+  kubectl scale deployment todo-backend -n todo-app --replicas=5
+
+Check status:
+  kubectl get all -n todo-app
+
+Learn more:
+  Read KUBERNETES_GUIDE.md for advanced management
+
+================================================================================
+
+YOUR KUBERNETES DEPLOYMENT IS COMPLETE!
+
+Project location: G:\MCA Project\To-Do sample updated\To-Do sample
+Application URL: http://<EXTERNAL-IP or node-ip:port>
+Namespace: todo-app
+Replicas: 2 (auto-scales to 5)
+
+================================================================================

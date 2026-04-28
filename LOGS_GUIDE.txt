@@ -1,0 +1,272 @@
+================================================================================
+                        VIEWING LOGS - SIMPLE GUIDE
+================================================================================
+
+Your project location:
+  G:\MCA Project\To-Do sample updated\To-Do sample
+
+================================================================================
+
+📋 WHAT YOU HAVE:
+
+Three Simple Scripts to View Logs:
+
+1. logs.ps1
+   → Auto-detects if Docker or Kubernetes is running
+   → Shows logs automatically
+   → No need to choose which one
+
+2. logs-docker.ps1
+   → View logs specifically from Docker
+   → Use if running Docker locally
+
+3. logs-kubernetes.ps1
+   → View logs specifically from Kubernetes
+   → Use if running on cluster
+
+================================================================================
+
+🚀 HOW TO USE:
+
+EASIEST WAY - Let it Auto-Detect:
+
+  Just run:
+    .\logs.ps1
+
+  It will:
+    ✓ Check if Docker is running
+    ✓ Check if Kubernetes is running
+    ✓ Show logs from whichever one is active
+    ✓ Display in real-time
+
+  To stop viewing logs:
+    Press Ctrl+C
+
+
+DOCKER - View Logs:
+
+  Run:
+    .\logs-docker.ps1
+
+  Or use this command directly:
+    docker-compose logs -f
+
+
+KUBERNETES - View Logs:
+
+  Run:
+    .\logs-kubernetes.ps1
+
+  Or use this command directly:
+    kubectl logs -f deployment/todo-backend -n todo-app
+
+================================================================================
+
+📊 TYPICAL LOG OUTPUT:
+
+DOCKER Logs:
+  Creating network...
+  Building backend...
+  Starting container...
+  To-Do List Backend API running on http://localhost:3001
+  MongoDB connected
+  (app running messages)
+
+KUBERNETES Logs:
+  To-Do List Backend API running on http://localhost:3001
+  MongoDB connected
+  (api requests and responses)
+
+================================================================================
+
+⚙️ EXAMPLE WORKFLOW:
+
+1. Start your application:
+   .\start-docker.ps1
+   (or .\start-kubernetes.ps1)
+
+2. Open another PowerShell window
+
+3. View logs in real-time:
+   .\logs.ps1
+
+4. Go back to first window and use your app
+
+5. Watch logs appear as you interact with app:
+   - Signup: See authentication logs
+   - Add todo: See database operations
+   - View todos: See API calls
+
+6. Stop viewing logs:
+   Press Ctrl+C
+
+================================================================================
+
+🔍 WHAT LOGS SHOW:
+
+Application Logs Include:
+  ✓ Server startup messages
+  ✓ Database connection status
+  ✓ API request/response information
+  ✓ Error messages
+  ✓ Database operations
+  ✓ User actions (signup, login, etc.)
+  ✓ To-do CRUD operations
+  ✓ Any warnings or issues
+
+================================================================================
+
+🆚 DIFFERENCE BETWEEN SCRIPTS:
+
+logs.ps1 (RECOMMENDED):
+  Pros:
+    ✓ Smart auto-detection
+    ✓ Works for both Docker and Kubernetes
+    ✓ Only one script to remember
+    ✓ Perfect for switching between modes
+
+logs-docker.ps1:
+  Pros:
+    ✓ Specific for Docker
+    ✓ Shows all container output
+    ✓ Good if only using Docker
+
+logs-kubernetes.ps1:
+  Pros:
+    ✓ Specific for Kubernetes
+    ✓ Shows pod logs only
+    ✓ Good if only using Kubernetes
+
+================================================================================
+
+💡 TIPS:
+
+1. View logs while testing
+   - Start app in one PowerShell
+   - View logs in another PowerShell
+   - Use app in browser
+   - Watch logs respond to your actions
+
+2. Multiple pods (Kubernetes)
+   - logs-kubernetes.ps1 shows all pod logs
+   - To see specific pod: kubectl logs pod-name -n todo-app
+   - To see previous pod: kubectl logs pod-name -n todo-app --previous
+
+3. Filter logs (if needed)
+   - Docker: docker-compose logs -f | findstr "error"
+   - Kubernetes: kubectl logs -f deployment/todo-backend -n todo-app | findstr "error"
+
+4. Stop logs gracefully
+   - Press Ctrl+C
+   - App keeps running, just stops showing logs
+   - Run logs script again to view again
+
+5. Logs vs Status
+   - logs.ps1 shows detailed output
+   - For status: use status-docker.ps1 or status-kubernetes.ps1 (if available)
+
+================================================================================
+
+❌ TROUBLESHOOTING:
+
+"No application is running"
+  Solution: Start your app first
+    .\start-docker.ps1 (or .\start-kubernetes.ps1)
+
+"Cannot connect to Docker daemon"
+  Solution: Start Docker Desktop
+
+"Error: cannot get namespace"
+  Solution: Start Kubernetes application first
+    .\start-kubernetes.ps1
+
+"No pods in Running state"
+  Solution: Wait 30-60 seconds for pods to start
+    Check with: kubectl get pods -n todo-app
+
+"Logs not showing anything"
+  Solution: Your app might be idle
+    Try: Sign up or add a todo to generate logs
+
+================================================================================
+
+📋 QUICK REFERENCE:
+
+Auto-detect and view:
+  .\logs.ps1
+
+View Docker logs only:
+  .\logs-docker.ps1
+
+View Kubernetes logs only:
+  .\logs-kubernetes.ps1
+
+View last 100 lines (Kubernetes):
+  kubectl logs deployment/todo-backend -n todo-app --tail=100
+
+View specific pod (Kubernetes):
+  kubectl logs <pod-name> -n todo-app
+
+View with timestamp (Kubernetes):
+  kubectl logs deployment/todo-backend -n todo-app --timestamps
+
+Follow logs in real-time (Docker):
+  docker-compose logs -f
+
+================================================================================
+
+✨ WORKFLOW EXAMPLE:
+
+Terminal 1 - Start Application:
+  .\start-docker.ps1
+  (wait for "Application is RUNNING")
+
+Terminal 2 - View Logs:
+  .\logs.ps1
+  (logs will start showing)
+
+Browser:
+  http://localhost:3001
+
+Now:
+  - Sign up in browser
+  - Watch logs in Terminal 2
+  - See authentication and database logs
+  - Add a todo
+  - Watch logs show the request
+  - Mark it complete
+  - See database update logs
+
+This helps you understand what's happening behind the scenes!
+
+================================================================================
+
+🎯 BEST PRACTICE:
+
+When troubleshooting:
+  1. Start viewing logs first: .\logs.ps1
+  2. Try the action that's causing issues
+  3. Watch logs to see error messages
+  4. Identify what's wrong
+  5. Fix and restart
+
+When monitoring:
+  1. Run app: .\start-docker.ps1 (or Kubernetes)
+  2. View logs: .\logs.ps1
+  3. Use app normally
+  4. Logs show everything happening
+
+================================================================================
+
+✅ YOU'RE ALL SET!
+
+Just use:
+  .\logs.ps1     (Smart auto-detect - RECOMMENDED)
+
+Or specific ones:
+  .\logs-docker.ps1      (Docker only)
+  .\logs-kubernetes.ps1  (Kubernetes only)
+
+That's it!
+
+================================================================================

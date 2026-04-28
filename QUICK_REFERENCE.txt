@@ -1,0 +1,127 @@
+================================================================================
+                    QUICK REFERENCE CARD - START & STOP
+================================================================================
+
+📌 SAVE THIS FOR QUICK ACCESS!
+
+================================================================================
+
+🐳 DOCKER LOCAL (For Development):
+
+START APPLICATION:
+  .\start-docker.ps1
+
+STOP APPLICATION:
+  .\stop-docker.ps1
+
+ACCESS:
+  http://localhost:3001
+
+LOGS:
+  docker-compose logs -f
+
+STATUS:
+  docker-compose ps
+
+================================================================================
+
+☸️  KUBERNETES (For Cluster):
+
+START APPLICATION:
+  .\start-kubernetes.ps1
+
+STOP APPLICATION:
+  .\stop-kubernetes.ps1
+
+ACCESS:
+  http://localhost:3001
+
+LOGS:
+  kubectl logs -f deployment/todo-backend -n todo-app
+
+STATUS:
+  kubectl get pods -n todo-app
+
+PODS:
+  kubectl get all -n todo-app
+
+================================================================================
+
+✨ THAT'S IT!
+
+Just run one command to start everything.
+Just run one command to stop everything.
+
+No multiple commands needed!
+
+================================================================================
+
+🎯 WHICH ONE TO USE?
+
+Local Development:        Use Docker
+  .\start-docker.ps1
+
+Deploy on Cluster:        Use Kubernetes
+  .\start-kubernetes.ps1
+
+================================================================================
+
+🌐 BOTH ACCESS AT:
+  http://localhost:3001
+
+================================================================================
+
+📝 WORKFLOW:
+
+1. Navigate to project folder:
+   cd "G:\MCA Project\To-Do sample updated\To-Do sample"
+
+2. Start (choose one):
+   .\start-docker.ps1     (Local)
+   OR
+   .\start-kubernetes.ps1 (Cluster)
+
+3. Open browser:
+   http://localhost:3001
+
+4. Use your app!
+
+5. Stop (choose matching one):
+   .\stop-docker.ps1      (If used Docker)
+   OR
+   .\stop-kubernetes.ps1  (If used Kubernetes)
+
+================================================================================
+
+❓ COMMON ISSUES:
+
+Can't run script?
+  Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope CurrentUser
+
+Docker not running?
+  Start Docker Desktop first
+
+Cluster not available?
+  Start your Kubernetes cluster first
+
+Port 3001 in use?
+  Stop other services or edit config file
+
+MongoDB error?
+  Check internet connection
+
+================================================================================
+
+✅ EVERYTHING IS AUTOMATED!
+
+Scripts handle:
+  ✓ Building image
+  ✓ Starting services
+  ✓ Waiting for readiness
+  ✓ Setting up networking
+  ✓ Showing you the URL
+  ✓ Cleanup and shutdown
+
+Just run one script and you're done!
+
+================================================================================

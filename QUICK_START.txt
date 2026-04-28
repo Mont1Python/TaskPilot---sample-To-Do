@@ -1,0 +1,187 @@
+========================================
+WHERE TO RUN YOUR TO-DO APPLICATION
+========================================
+
+Your project folder is:
+G:\MCA Project\To-Do sample updated\To-Do sample
+
+=====================================
+OPTION 1: RUN LOCALLY (RECOMMENDED FOR TESTING)
+=====================================
+
+Step 1: Open PowerShell or Command Prompt
+- Press: Win + R
+- Type: powershell
+- Press: Enter
+
+Step 2: Navigate to your project folder
+Copy and paste this in PowerShell:
+cd "G:\MCA Project\To-Do sample updated\To-Do sample"
+
+Step 3: Run the setup script
+powershell -ExecutionPolicy Bypass -File setup-local.sh
+
+OR manually:
+- npm install
+- docker build -t todo-app:latest .
+- docker-compose up
+
+Step 4: Open in Browser
+http://localhost:3001
+
+Step 5: Test the app
+- Sign up with email and password
+- Add some to-do items
+- Verify it works
+
+Step 6: Stop when done
+Press Ctrl+C in PowerShell
+or run: docker-compose down
+
+=====================================
+OPTION 2: RUN ON KUBERNETES CLUSTER
+=====================================
+
+Prerequisites:
+- Kubernetes cluster must be running (1 master, 2 workers)
+- kubectl must be configured
+- Docker must be installed
+
+Step 1: Navigate to project folder (same as above)
+cd "G:\MCA Project\To-Do sample updated\To-Do sample"
+
+Step 2: Deploy to Kubernetes
+powershell -ExecutionPolicy Bypass -File deploy-to-k8s.sh
+
+OR manually:
+- docker build -t todo-app:latest .
+- kind load docker-image todo-app:latest
+- kubectl apply -f k8s-todo-deployment.yaml
+
+Step 3: Verify deployment
+powershell -ExecutionPolicy Bypass -File verify-todo-k8s.sh
+
+Step 4: Get access URL
+kubectl get svc -n todo-app
+
+Step 5: Access the app
+Open the LoadBalancer IP in browser (http://<IP>)
+
+=====================================
+TROUBLESHOOTING
+=====================================
+
+1. PowerShell script won't run?
+   - Set execution policy: Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope CurrentUser
+   - Or run: powershell -ExecutionPolicy Bypass -File setup-local.sh
+
+2. Docker not found?
+   - Install Docker Desktop: https://www.docker.com/products/docker-desktop
+   - Restart PowerShell after installation
+
+3. Port 3001 already in use?
+   - Edit docker-compose.yml, change port from 3001 to 3002
+   - Or stop the process using port 3001
+
+4. MongoDB connection error?
+   - Check .env file has MONGODB_URI set
+   - Verify MongoDB is accessible from your machine
+   - Check internet connection (MongoDB is in cloud)
+
+5. Kubernetes cluster not found?
+   - Run: kubectl cluster-info
+   - If error, cluster is not running
+   - Start your Kubernetes cluster first
+
+=====================================
+FILE EXPLANATIONS
+=====================================
+
+Files in your project:
+├── index.html               - Frontend UI (what users see)
+├── server.js                - Backend API (Express server)
+├── package.json             - Node.js dependencies list
+├── .env                     - Environment variables (MongoDB URI, JWT secret)
+├── Dockerfile               - Instructions to build Docker image
+├── docker-compose.yml       - Local development setup
+├── k8s-todo-deployment.yaml - Kubernetes deployment config
+├── setup-local.sh           - Script to run locally
+├── deploy-to-k8s.sh         - Script to deploy to Kubernetes
+├── verify-todo-k8s.sh       - Script to verify deployment
+├── KUBERNETES_GUIDE.md      - Detailed Kubernetes documentation
+└── README-UPDATED.md        - Complete project documentation
+
+=====================================
+QUICK COMMANDS
+=====================================
+
+LOCAL DEVELOPMENT:
+cd "G:\MCA Project\To-Do sample updated\To-Do sample"
+docker-compose up                           # Start containers
+docker-compose down                         # Stop containers
+docker-compose logs -f backend              # View logs
+docker-compose ps                           # Check status
+
+KUBERNETES:
+cd "G:\MCA Project\To-Do sample updated\To-Do sample"
+./deploy-to-k8s.sh                          # Deploy
+./verify-todo-k8s.sh                        # Verify
+kubectl get pods -n todo-app                # Check pods
+kubectl logs -f deployment/todo-backend -n todo-app  # View logs
+kubectl get svc -n todo-app                 # Get service IP
+
+=====================================
+WHAT HAPPENS WHEN YOU RUN IT?
+=====================================
+
+LOCAL (docker-compose up):
+1. Reads docker-compose.yml
+2. Builds Docker image from Dockerfile
+3. Starts container with your Node.js app
+4. App connects to MongoDB (cloud)
+5. App runs on http://localhost:3001
+6. You can sign up, login, create to-dos
+
+KUBERNETES (deploy-to-k8s.sh):
+1. Checks kubectl can connect to cluster
+2. Builds Docker image
+3. Loads image to cluster nodes
+4. Applies k8s-todo-deployment.yaml
+5. Creates 2 pod replicas
+6. Service exposes app on LoadBalancer IP
+7. Auto-scales between 2-5 pods based on load
+8. Apps communicates with MongoDB (cloud)
+
+=====================================
+VERIFY IT'S RUNNING
+=====================================
+
+LOCAL:
+- Open http://localhost:3001 in browser
+- Should see To-Do application UI
+- Try signing up
+
+KUBERNETES:
+- Run: ./verify-todo-k8s.sh
+- Check: kubectl get pods -n todo-app
+- All pods should be "Running"
+- Run: kubectl get svc -n todo-app
+- Get the EXTERNAL-IP and open in browser
+
+=====================================
+NEXT STEPS
+=====================================
+
+1. Test locally first with: docker-compose up
+2. Make sure MongoDB connection works
+3. Deploy to Kubernetes when ready
+4. Use ./verify-todo-k8s.sh to check status
+5. Monitor with: kubectl logs -f deployment/todo-backend -n todo-app
+6. Read KUBERNETES_GUIDE.md for advanced usage
+
+For detailed help, see:
+- README-UPDATED.md (comprehensive guide)
+- KUBERNETES_GUIDE.md (Kubernetes details)
+- .env file (configuration)
+
+=====================================

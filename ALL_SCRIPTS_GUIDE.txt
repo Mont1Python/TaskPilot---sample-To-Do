@@ -1,0 +1,333 @@
+================================================================================
+                    COMPLETE SCRIPT REFERENCE - ALL COMMANDS
+================================================================================
+
+Your project location:
+  G:\MCA Project\To-Do sample updated\To-Do sample
+
+================================================================================
+
+📋 ALL SCRIPTS YOU HAVE:
+
+START/STOP:
+  .\start-docker.ps1              ← Start app locally
+  .\stop-docker.ps1               ← Stop local app
+  .\start-kubernetes.ps1          ← Start on cluster
+  .\stop-kubernetes.ps1           ← Stop from cluster
+
+LOGS & STATUS:
+  .\logs.ps1                       ← View logs (auto-detect)
+  .\logs-docker.ps1               ← View Docker logs
+  .\logs-kubernetes.ps1           ← View Kubernetes logs
+  .\status.ps1                     ← Check app status
+
+================================================================================
+
+🚀 COMMON WORKFLOWS:
+
+WORKFLOW 1 - LOCAL DEVELOPMENT:
+
+  Step 1: Start app
+    .\start-docker.ps1
+
+  Step 2: In another PowerShell, view logs
+    .\logs.ps1
+
+  Step 3: Open browser
+    http://localhost:3001
+
+  Step 4: Use the app
+    Sign up, add todos, test features
+
+  Step 5: Check status (optional)
+    .\status.ps1
+
+  Step 6: Stop when done
+    .\stop-docker.ps1
+
+
+WORKFLOW 2 - KUBERNETES DEPLOYMENT:
+
+  Step 1: Start app on cluster
+    .\start-kubernetes.ps1
+
+  Step 2: In another PowerShell, view logs
+    .\logs.ps1
+
+  Step 3: Open browser
+    http://localhost:3001
+
+  Step 4: Use the app
+    Sign up, add todos, test features
+
+  Step 5: Check status
+    .\status.ps1
+
+  Step 6: Stop when done
+    .\stop-kubernetes.ps1
+
+
+WORKFLOW 3 - MONITORING & TROUBLESHOOTING:
+
+  Step 1: Check status
+    .\status.ps1
+
+  Step 2: View logs if issues
+    .\logs.ps1
+
+  Step 3: Look for error messages
+    Watch the log output
+
+  Step 4: Fix issues and restart
+    .\stop-docker.ps1 (or .\stop-kubernetes.ps1)
+    .\start-docker.ps1 (or .\start-kubernetes.ps1)
+
+================================================================================
+
+📊 WHAT EACH SCRIPT DOES:
+
+START/STOP SCRIPTS:
+
+.\start-docker.ps1
+  ✓ Checks Docker is running
+  ✓ Builds Docker image
+  ✓ Starts containers
+  ✓ Verifies startup
+  ✓ Shows access URL
+  Time: ~10-15 seconds
+
+.\stop-docker.ps1
+  ✓ Stops containers
+  ✓ Removes containers
+  ✓ Frees port
+  Time: ~5 seconds
+
+.\start-kubernetes.ps1
+  ✓ Checks cluster connectivity
+  ✓ Builds Docker image
+  ✓ Deploys to Kubernetes
+  ✓ Waits for pods
+  ✓ Sets up port forwarding
+  ✓ Shows access URL
+  Time: ~60 seconds
+
+.\stop-kubernetes.ps1
+  ✓ Kills port forwarding
+  ✓ Deletes pods
+  ✓ Deletes services
+  ✓ Cleans namespace
+  Time: ~10 seconds
+
+
+LOGS SCRIPTS:
+
+.\logs.ps1 (SMART - RECOMMENDED)
+  ✓ Auto-detects Docker or Kubernetes
+  ✓ Shows real-time logs
+  ✓ Works for both setups
+  ✓ Press Ctrl+C to stop
+
+.\logs-docker.ps1
+  ✓ Shows Docker container logs
+  ✓ Real-time streaming
+  ✓ Includes build output
+  ✓ Press Ctrl+C to stop
+
+.\logs-kubernetes.ps1
+  ✓ Shows Kubernetes pod logs
+  ✓ Real-time streaming
+  ✓ From all replicas
+  ✓ Press Ctrl+C to stop
+
+
+STATUS SCRIPT:
+
+.\status.ps1
+  ✓ Checks if app is running
+  ✓ Shows Docker or Kubernetes status
+  ✓ Displays pod/container info
+  ✓ Shows access URL
+  ✓ Suggests next commands
+
+================================================================================
+
+🎯 QUICK REFERENCE CHART:
+
+ACTION                          DOCKER              KUBERNETES
+────────────────────────────────────────────────────────────────────
+Start Application              .\start-docker.ps1   .\start-kubernetes.ps1
+Stop Application               .\stop-docker.ps1    .\stop-kubernetes.ps1
+View Logs                       .\logs.ps1 (either)  .\logs.ps1 (either)
+Check Status                    .\status.ps1         .\status.ps1
+Access Application             http://localhost:3001 http://localhost:3001
+
+================================================================================
+
+💡 USAGE EXAMPLES:
+
+EXAMPLE 1 - Full Local Development Session:
+
+  # Terminal 1
+  .\start-docker.ps1
+  (wait for "Application is RUNNING")
+
+  # Terminal 2
+  .\logs.ps1
+
+  # Browser
+  http://localhost:3001
+
+  # Use app, watch logs
+
+  # When done (Terminal 1)
+  .\stop-docker.ps1
+
+
+EXAMPLE 2 - Kubernetes Deployment:
+
+  # Terminal 1
+  .\start-kubernetes.ps1
+  (wait for "Application is RUNNING")
+
+  # Terminal 2
+  .\logs.ps1
+
+  # Browser
+  http://localhost:3001
+
+  # Use app, watch logs
+
+  # When done (Terminal 1)
+  .\stop-kubernetes.ps1
+
+
+EXAMPLE 3 - Check and Troubleshoot:
+
+  # Check status
+  .\status.ps1
+
+  # If shows running, view logs
+  .\logs.ps1
+
+  # If shows errors, fix and restart
+  .\stop-docker.ps1
+  .\start-docker.ps1
+
+
+EXAMPLE 4 - Run Both Terminals Visible:
+
+  # Terminal 1
+  .\start-docker.ps1
+
+  # Terminal 2 (resize to side-by-side)
+  .\logs.ps1
+
+  # Browser
+  http://localhost:3001
+
+  # Use app in browser while watching logs in Terminal 2
+
+================================================================================
+
+❓ COMMON QUESTIONS:
+
+Q: Which script should I use?
+A: Usually just .\start-docker.ps1 or .\start-kubernetes.ps1
+   Add .\logs.ps1 in another window to monitor
+
+Q: What if I don't know what's wrong?
+A: Run .\status.ps1 first, then .\logs.ps1 to see details
+
+Q: How do I see logs while using the app?
+A: Open two PowerShell windows:
+   1. Run .\start-docker.ps1
+   2. In other window, run .\logs.ps1
+   3. Use app in browser
+   4. Watch logs appear
+
+Q: Can I run both Docker and Kubernetes?
+A: No, they both use port 3001
+   Stop one before starting the other
+
+Q: What if logs don't show anything?
+A: App might be idle. Try signing up or adding a todo
+   Or your app hasn't started yet - wait and check status
+
+Q: How do I know if app is running?
+A: Run .\status.ps1 - shows everything
+
+================================================================================
+
+🔄 FULL START-TO-STOP CYCLE:
+
+LOCAL DOCKER:
+
+  1. Open PowerShell
+  2. .\start-docker.ps1                (wait for "Application is RUNNING")
+  3. .\logs.ps1                        (in another PowerShell)
+  4. http://localhost:3001             (open in browser)
+  5. Use app
+  6. Ctrl+C in logs window            (stop viewing logs)
+  7. .\stop-docker.ps1               (stop in first window)
+
+KUBERNETES:
+
+  1. Open PowerShell
+  2. .\start-kubernetes.ps1           (wait for "Application is RUNNING")
+  3. .\logs.ps1                       (in another PowerShell)
+  4. http://localhost:3001            (open in browser)
+  5. Use app
+  6. Ctrl+C in logs window           (stop viewing logs)
+  7. .\stop-kubernetes.ps1          (stop in first window)
+
+================================================================================
+
+✨ BEST PRACTICES:
+
+1. Always use two PowerShell windows
+   - One for start/stop
+   - One for logs/monitoring
+
+2. Check status if unsure
+   .\status.ps1
+
+3. View logs while developing
+   .\logs.ps1
+
+4. Stop cleanly before restarting
+   .\stop-docker.ps1 or .\stop-kubernetes.ps1
+
+5. Wait for startup messages
+   - Docker: ~15 seconds
+   - Kubernetes: ~60 seconds
+
+6. Access URL is always same
+   http://localhost:3001
+
+================================================================================
+
+🎉 SUMMARY:
+
+You have everything you need:
+
+START/STOP:
+  Just one command to start all
+  Just one command to stop all
+
+LOGS:
+  Simple one-command to view logs
+  Auto-detects which setup you're using
+
+STATUS:
+  One command to check if running
+
+EVERYTHING IS SIMPLIFIED!
+
+================================================================================
+
+Need help? See:
+  - QUICK_REFERENCE.txt (one-page)
+  - START_STOP_GUIDE.txt (detailed)
+  - LOGS_GUIDE.txt (logging guide)
+
+================================================================================

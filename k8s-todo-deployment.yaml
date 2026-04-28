@@ -1,0 +1,189 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: todo-app
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: todo-app-config
+  namespace: todo-app
+data:
+  PORT: "3001"
+  FRONTEND_URL: "http://localhost:3001"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: todo-app-secrets
+  namespace: todo-app
+type: Opaque
+stringData:
+  MONGODB_URI: "mongodb://raj0106:nahtnam01062000@ac-dmf2dgz-shard-00-00.dv4icz3.mongodb.net:27017,ac-dmf2dgz-shard-00-01.dv4icz3.mongodb.net:27017,ac-dmf2dgz-shard-00-02.dv4icz3.mongodb.net:27017/?ssl=true&replicaSet=atlas-yu3xyi-shard-0&authSource=admin&appName=To-DoList"
+  JWT_SECRET: "bd7aca6f3a6249730372dc9ae31ac799fcebb1da4c6f71ee9d0e1b9d5b263dc3731ec5e5b641496d0707120de5dd33193cd16ab823c148cb16d90315b4786019"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-backend
+  namespace: todo-app
+  labels:
+    app: todo-backend
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: todo-backend
+  template:
+    metadata:
+      labels:
+        app: todo-backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "3001"
+    spec:
+      containers:
+      - name: todo-backend
+        image: todo-app:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3001
+          name: http
+          protocol: TCP
+        env:
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: todo-app-config
+              key: PORT
+        - name: FRONTEND_URL
+          valueFrom:
+            configMapKeyRef:
+              name: todo-app-config
+              key: FRONTEND_URL
+        - name: MONGODB_URI
+          valueFrom:
+            secretKeyRef:
+              name: todo-app-secrets
+              key: MONGODB_URI
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: todo-app-secrets
+              key: JWT_SECRET
+        - name: NODE_ENV
+          value: "production"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 3001
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 3
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3001
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 2
+        securityContext:
+          runAsNonRoot: false
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+      volumes:
+      - name: tmp
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-backend-service
+  namespace: todo-app
+  labels:
+    app: todo-backend
+spec:
+  type: ClusterIP
+  selector:
+    app: todo-backend
+  ports:
+  - name: http
+    port: 80
+    targetPort: 3001
+    protocol: TCP
+  sessionAffinity: None
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: todo-backend-hpa
+  namespace: todo-app
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: todo-backend
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+      - type: Pods
+        value: 4
+        periodSeconds: 15
+      selectPolicy: Max
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: todo-backend-pdb
+  namespace: todo-app
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: todo-backend

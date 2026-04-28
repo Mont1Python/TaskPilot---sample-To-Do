@@ -1,0 +1,221 @@
+================================================================================
+                    SIMPLE GUIDE - START & STOP YOUR APP
+================================================================================
+
+Your project location:
+  G:\MCA Project\To-Do sample updated\To-Do sample
+
+================================================================================
+
+📋 WHAT YOU HAVE:
+
+Two Ways to Run:
+
+1. DOCKER (Local Machine)
+   - start-docker.ps1 (start app locally)
+   - stop-docker.ps1 (stop app locally)
+
+2. KUBERNETES (On Cluster)
+   - start-kubernetes.ps1 (start on cluster)
+   - stop-kubernetes.ps1 (stop from cluster)
+
+================================================================================
+
+🚀 DOCKER - LOCAL DEVELOPMENT
+
+START:
+  In PowerShell, run:
+    .\start-docker.ps1
+
+  This will:
+    ✓ Start Docker containers
+    ✓ Build image if needed
+    ✓ Start backend service
+    ✓ Show you the access URL
+
+  Access: http://localhost:3001
+
+STOP:
+  In PowerShell, run:
+    .\stop-docker.ps1
+
+  This will:
+    ✓ Stop all containers
+    ✓ Remove containers
+    ✓ Free up port 3001
+
+RESTART:
+  Just run .\start-docker.ps1 again
+
+================================================================================
+
+🎯 KUBERNETES - CLUSTER DEPLOYMENT
+
+START:
+  In PowerShell, run:
+    .\start-kubernetes.ps1
+
+  This will:
+    ✓ Check cluster is running
+    ✓ Build Docker image
+    ✓ Deploy to Kubernetes
+    ✓ Wait for pods to start
+    ✓ Setup port forwarding
+    ✓ Show you the access URL
+
+  Access: http://localhost:3001
+
+STOP:
+  In PowerShell, run:
+    .\stop-kubernetes.ps1
+
+  This will:
+    ✓ Kill port forwarding
+    ✓ Delete all pods
+    ✓ Delete services
+    ✓ Delete entire deployment
+
+RESTART:
+  Just run .\start-kubernetes.ps1 again
+
+================================================================================
+
+📱 QUICK REFERENCE:
+
+DOCKER LOCAL:
+  Start: .\start-docker.ps1
+  Stop:  .\stop-docker.ps1
+  View logs: docker-compose logs -f
+  Access: http://localhost:3001
+
+KUBERNETES:
+  Start: .\start-kubernetes.ps1
+  Stop:  .\stop-kubernetes.ps1
+  View logs: kubectl logs -f deployment/todo-backend -n todo-app
+  Access: http://localhost:3001
+
+================================================================================
+
+⚙️ BEFORE YOU START:
+
+DOCKER:
+  ✓ Docker Desktop must be running
+  ✓ Port 3001 must be available
+
+KUBERNETES:
+  ✓ Kubernetes cluster must be running
+  ✓ kubectl must be installed
+  ✓ Docker Desktop must be running (to build image)
+  ✓ Port 3001 must be available
+  ✓ Cluster must have 1 master + 2 workers
+
+================================================================================
+
+🔍 CHECK STATUS:
+
+DOCKER:
+  docker-compose ps
+
+KUBERNETES:
+  kubectl get pods -n todo-app
+
+================================================================================
+
+❌ TROUBLESHOOTING:
+
+Docker won't start:
+  - Make sure Docker Desktop is running
+  - Check port 3001 is not in use
+  - Try: docker-compose down
+  - Then: .\start-docker.ps1
+
+Kubernetes won't start:
+  - Check cluster is running: kubectl cluster-info
+  - Check nodes are ready: kubectl get nodes
+  - Make sure Docker is running (to build image)
+  - Try: .\stop-kubernetes.ps1
+  - Then: .\start-kubernetes.ps1
+
+Port 3001 already in use:
+  Docker: Stop other services using port 3001
+  Kubernetes: Kill port-forward and try again
+
+No internet/MongoDB error:
+  - Check internet connection
+  - Verify .env file has correct MongoDB URI
+
+================================================================================
+
+🎯 TYPICAL WORKFLOW:
+
+DEVELOPMENT:
+  1. Open PowerShell in project folder
+  2. Run: .\start-docker.ps1
+  3. Work on your app
+  4. Test at: http://localhost:3001
+  5. When done, run: .\stop-docker.ps1
+
+DEPLOYMENT:
+  1. Open PowerShell in project folder
+  2. Run: .\start-kubernetes.ps1
+  3. Wait for "Application is RUNNING"
+  4. Test at: http://localhost:3001
+  5. When done, run: .\stop-kubernetes.ps1
+
+================================================================================
+
+🌍 BOTH WAYS ACCESS THE SAME APP:
+
+Whether you use Docker or Kubernetes, both are accessible at:
+  http://localhost:3001
+
+The difference:
+  - Docker: Runs on your local machine
+  - Kubernetes: Runs on cluster (3 nodes)
+
+================================================================================
+
+💡 TIPS:
+
+1. Keep MongoDB connection working
+   - Make sure internet is connected
+   - Check .env file has correct URI
+
+2. Port conflicts
+   - If port 3001 is in use, stop other services
+   - Or edit docker-compose.yml for different port
+
+3. Docker image size
+   - First build takes 1-2 minutes
+   - Subsequent builds are faster (use cache)
+   - Kubernetes rebuild takes 1-2 minutes
+
+4. Pod startup time
+   - Kubernetes pods take 30-60 seconds to start
+   - Be patient, it checks health before showing "Running"
+
+================================================================================
+
+📋 ONE-COMMAND SUMMARY:
+
+DOCKER LOCAL (One command):
+  .\start-docker.ps1     # Entire setup
+  .\stop-docker.ps1      # Complete cleanup
+
+KUBERNETES (One command):
+  .\start-kubernetes.ps1 # Entire deployment
+  .\stop-kubernetes.ps1  # Complete cleanup
+
+That's it! No multiple commands needed!
+
+================================================================================
+
+✅ YOU'RE ALL SET!
+
+Just use:
+  - .\start-docker.ps1 / .\stop-docker.ps1 (for local)
+  - .\start-kubernetes.ps1 / .\stop-kubernetes.ps1 (for cluster)
+
+Everything else is handled automatically!
+
+================================================================================
